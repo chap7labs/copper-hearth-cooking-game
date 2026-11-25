@@ -1,0 +1,56 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 42%, #2c1c14 0%, #170f0b 72%, #0e0906 100%);
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color: #f9efe1;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.stage {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+}
+
+#kitchen-canvas {
+  display: block;
+  width: min(100vw - 16px, calc((100vh - 16px) * 16 / 9));
+  height: min(100vh - 16px, calc((100vw - 16px) * 9 / 16));
+  max-width: 1280px;
+  max-height: 720px;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 165, 86, 0.45);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(45, 25, 14, 0.9);
+  background: #221610;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
