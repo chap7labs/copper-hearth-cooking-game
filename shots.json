@@ -1,6 +1,6 @@
 [
-  { "name": "01_hero_kitchen.jpg", "scene": "hero_kitchen" },
-  { "name": "02_cooking_rush.jpg", "scene": "cooking_rush" },
-  { "name": "03_multi_dish_plating.jpg", "scene": "multi_dish_plating" },
+  { "name": "01_hero_kitchen.jpg", "scene": "daylight_counter_hero" },
+  { "name": "02_split_island_rush.jpg", "scene": "split_island_rush" },
+  { "name": "03_lantern_dinner_service.jpg", "scene": "lantern_dinner_service" },
   { "name": "04_shift_summary.jpg", "scene": "shift_summary" }
 ]

@@ -1,4 +1,4 @@
-// Fixed-timestep simulation loop and screen state machine for Copper Hearth.
+// Fixed-timestep simulation loop and screen state machine for Yuzu & Hinoki.
 
 export const SCREEN_TITLE = 'title';
 export const SCREEN_PLAYING = 'playing';

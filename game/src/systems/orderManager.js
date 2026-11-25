@@ -1,6 +1,7 @@
 // Order ticket queue, patience timers, combo scoring, tips, and shift summary evaluation.
 
-import { LAYOUT, RECIPE_MAP, SHIFTS } from '../config/recipes.js';
+import { RECIPE_MAP, SHIFTS } from '../config/recipes.js';
+import { stationRect } from '../config/kitchenLayouts.js';
 import { emitBurst, spawnPopup } from './kitchenState.js';
 
 export function createSeededRandom(seed) {
@@ -53,13 +54,13 @@ export function startShift(orders, shiftIndex) {
   orders.missedTickets = 0;
   orders.combo = 0;
   orders.bestCombo = 0;
+  orders.lastRemovedId = null;
   orders.shiftComplete = false;
   orders.starsEarned = 0;
 
-  // Immediate lively opening tickets with distinct recipes
   spawnTicket(orders, shift.recipeIds[0], 1.0);
-  spawnTicket(orders, shift.recipeIds[1], 0.92);
-  spawnTicket(orders, shift.recipeIds[2], 0.85);
+  spawnTicket(orders, shift.recipeIds[1], 0.93);
+  spawnTicket(orders, shift.recipeIds[2], 0.86);
 }
 
 function pickRecipeId(orders) {
@@ -68,7 +69,6 @@ function pickRecipeId(orders) {
   const activeIds = new Set(orders.tickets.map((t) => t.recipeId));
   const fresh = pool.filter((id) => !activeIds.has(id));
   if (fresh.length > 0) {
-    // Prefer a missing recipe that was not just served/expired so all four dishes cycle cleanly
     const distinct = fresh.filter((id) => id !== orders.lastRemovedId);
     const list = distinct.length > 0 ? distinct : fresh;
     return list[0];
@@ -81,7 +81,7 @@ export function spawnTicket(orders, forcedRecipeId = null, initialRatio = 1) {
   if (orders.tickets.length >= shift.maxTickets) return null;
   const recipeId = forcedRecipeId ?? pickRecipeId(orders);
   const recipe = RECIPE_MAP[recipeId];
-  const speedScale = Math.max(0.76, 1 - orders.shiftIndex * 0.06);
+  const speedScale = Math.max(0.78, 1 - orders.shiftIndex * 0.05);
   const maxPatience = Math.round(recipe.patienceSec * speedScale);
   const ticket = {
     id: orders.nextTicketNumber,
@@ -131,7 +131,7 @@ export function updateOrders(orders, dt, onEvent) {
 
   orders.spawnCooldown -= dt;
   const dynamicInterval = shift.endless
-    ? Math.max(5.2, shift.spawnInterval - orders.dishesServed * 0.12)
+    ? Math.max(4.8, shift.spawnInterval - orders.dishesServed * 0.1)
     : shift.spawnInterval;
 
   if (orders.tickets.length < 3 || (orders.spawnCooldown <= 0 && orders.tickets.length < shift.maxTickets)) {
@@ -156,15 +156,14 @@ export function getComboMultiplier(combo) {
   return 1.0;
 }
 
-export function servePlateFromPass(orders, kitchen, onEvent) {
-  const pass = kitchen.servingPass;
-  if (pass.plates.length === 0) {
-    kitchen.banner = { text: 'No plated dish on the Serving Pass yet!', color: '#f5b064', timer: 1.5 };
+export function servePlateFromPass(orders, kitchen, layout, passStationId, onEvent) {
+  const pass = kitchen.passStations[passStationId];
+  if (!pass || pass.plates.length === 0) {
+    kitchen.banner = { text: 'No finished plate on this Serving Pass!', color: '#f5b064', timer: 1.4 };
     onEvent?.('error');
     return false;
   }
 
-  // Match the oldest ticket that matches either plate on the pass (front plate preferred)
   let bestTicketIdx = -1;
   let bestPlateIdx = -1;
 
@@ -177,12 +176,16 @@ export function servePlateFromPass(orders, kitchen, onEvent) {
     }
   }
 
+  const passSt = layout.stations.find((s) => s.id === passStationId);
+  const passRect = passSt ? stationRect(passSt) : { cx: 1116, y: 134, h: 86 };
+  const popX = passRect.cx;
+  const popY = passRect.y + passRect.h + 26;
+
   if (bestTicketIdx === -1) {
-    // No matching ticket — discard front plate with small penalty feedback
     pass.plates.shift();
     pass.bellAnim = 1;
     orders.combo = 0;
-    spawnPopup(kitchen, 'WRONG ORDER', 'Combo Reset', 964, 172, '#ef706b');
+    spawnPopup(kitchen, 'WRONG ORDER', 'Combo Reset', popX, popY, '#ef706b');
     onEvent?.('error');
     return false;
   }
@@ -199,7 +202,7 @@ export function servePlateFromPass(orders, kitchen, onEvent) {
 
   const patienceRatio = ticket.patience / ticket.maxPatience;
   const speedTip = patienceRatio > 0.6 ? 6 : patienceRatio > 0.35 ? 3 : 0;
-  const perfectBonus = plate.perfectCount * 5;
+  const perfectBonus = plate.perfectCount * 6;
   const mult = getComboMultiplier(orders.combo - 1);
   const earned = Math.round((recipe.basePrice + speedTip + perfectBonus) * mult);
   const tipPart = Math.max(0, earned - recipe.basePrice);
@@ -213,11 +216,16 @@ export function servePlateFromPass(orders, kitchen, onEvent) {
     kitchen,
     `+$${earned}`,
     sub,
-    964,
-    172,
+    popX,
+    popY,
     plate.perfectCount > 0 ? '#ffe67a' : '#8ef0a2',
   );
-  emitBurst(kitchen, 'sparkle', LAYOUT.servingPass.cx, LAYOUT.servingPass.cy - 10, orders.combo >= 3 ? 16 : 10, '#ffe478');
+
+  const st = layout.stations.find((s) => s.id === passStationId);
+  if (st) {
+    const rect = stationRect(st);
+    emitBurst(kitchen, 'sparkle', rect.cx, rect.cy, orders.combo >= 3 ? 16 : 10, '#ffe478');
+  }
 
   onEvent?.('serve_success', { recipeId: recipe.id, earned, combo: orders.combo, perfect: plate.perfectCount > 0 });
   return true;

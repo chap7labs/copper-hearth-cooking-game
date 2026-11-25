@@ -1,4 +1,4 @@
-// Copper Hearth — Artisan Bistro Cooking Game entrypoint for make.fun (Node 22, standard library only).
+// Yuzu & Hinoki — Sunlit Kyoto Open-Kitchen entrypoint for make.fun (Node 22, standard library only).
 // Copies static game/ assets and 4 verified 1280x720 screenshots/ to the output directory,
 // then emits a deterministic dossier.json via the unmodified vendored buildDossier library.
 

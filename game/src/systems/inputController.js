@@ -1,6 +1,7 @@
-// Unified mouse/pointer and keyboard input controller for Copper Hearth.
+// Dual spatial input controller: WASD/Arrows + Space/E/Q/1-8/X AND click-to-move BFS routing.
 
-import { CANVAS_HEIGHT, CANVAS_WIDTH, INGREDIENTS, LAYOUT } from '../config/recipes.js';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, HUD_LAYOUT, INGREDIENTS } from '../config/recipes.js';
+import { stationRect } from '../config/kitchenLayouts.js';
 import { SCREEN_PAUSED, SCREEN_PLAYING, SCREEN_SUMMARY, SCREEN_TITLE } from '../engine/gameLoop.js';
 
 function pointInRect(x, y, rect) {
@@ -9,6 +10,7 @@ function pointInRect(x, y, rect) {
 
 export function createInputController(canvas, callbacks) {
   const pointer = { x: 640, y: 360, hoverZone: null };
+  const keysDown = new Set();
 
   function toCanvasCoords(event) {
     const rect = canvas.getBoundingClientRect();
@@ -22,38 +24,33 @@ export function createInputController(canvas, callbacks) {
   function detectHoverZone(x, y, screen, guideOpen) {
     if (guideOpen) return 'guide_close';
     if (screen === SCREEN_TITLE) {
-      for (let i = 0; i < LAYOUT.titleShiftCards.length; i += 1) {
-        if (pointInRect(x, y, LAYOUT.titleShiftCards[i])) return `shift_${i}`;
+      for (let i = 0; i < HUD_LAYOUT.titleShiftCards.length; i += 1) {
+        if (pointInRect(x, y, HUD_LAYOUT.titleShiftCards[i])) return `shift_${i}`;
       }
-      if (pointInRect(x, y, LAYOUT.titleStartBtn)) return 'title_start';
+      if (pointInRect(x, y, HUD_LAYOUT.titleStartBtn)) return 'title_start';
       return null;
     }
     if (screen === SCREEN_PAUSED) {
-      if (pointInRect(x, y, LAYOUT.pauseResumeBtn)) return 'pause_resume';
-      if (pointInRect(x, y, LAYOUT.pauseRestartBtn)) return 'pause_restart';
-      if (pointInRect(x, y, LAYOUT.pauseTitleBtn)) return 'pause_title';
+      if (pointInRect(x, y, HUD_LAYOUT.pauseResumeBtn)) return 'pause_resume';
+      if (pointInRect(x, y, HUD_LAYOUT.pauseRestartBtn)) return 'pause_restart';
+      if (pointInRect(x, y, HUD_LAYOUT.pauseTitleBtn)) return 'pause_title';
       return null;
     }
     if (screen === SCREEN_SUMMARY) {
-      if (pointInRect(x, y, LAYOUT.summaryNextBtn)) return 'summary_next';
-      if (pointInRect(x, y, LAYOUT.summaryReplayBtn)) return 'summary_replay';
-      if (pointInRect(x, y, LAYOUT.summaryEndlessBtn)) return 'summary_endless';
+      if (pointInRect(x, y, HUD_LAYOUT.summaryNextBtn)) return 'summary_next';
+      if (pointInRect(x, y, HUD_LAYOUT.summaryReplayBtn)) return 'summary_replay';
+      if (pointInRect(x, y, HUD_LAYOUT.summaryEndlessBtn)) return 'summary_endless';
       return null;
     }
 
-    if (pointInRect(x, y, LAYOUT.pauseBtn)) return 'btn_pause';
-    if (pointInRect(x, y, LAYOUT.muteBtn)) return 'btn_mute';
-    if (pointInRect(x, y, LAYOUT.guideBtn)) return 'btn_guide';
-    if (pointInRect(x, y, LAYOUT.skillets[0])) return 'skillet_0';
-    if (pointInRect(x, y, LAYOUT.skillets[1])) return 'skillet_1';
-    if (pointInRect(x, y, LAYOUT.choppingBoard)) return 'chop_board';
-    if (pointInRect(x, y, LAYOUT.sendPassBtn)) return 'send_pass';
-    if (pointInRect(x, y, LAYOUT.clearAssemblyBtn)) return 'clear_assembly';
-    if (pointInRect(x, y, LAYOUT.assemblyBoard)) return 'assembly';
-    if (pointInRect(x, y, LAYOUT.bellBtn) || pointInRect(x, y, LAYOUT.servingPass)) return 'serve_pass';
-    if (pointInRect(x, y, LAYOUT.trashBin)) return 'trash';
-    for (let i = 0; i < LAYOUT.pantryBins.length; i += 1) {
-      if (pointInRect(x, y, LAYOUT.pantryBins[i])) return `bin_${i}`;
+    if (pointInRect(x, y, HUD_LAYOUT.pauseBtn)) return 'btn_pause';
+    if (pointInRect(x, y, HUD_LAYOUT.muteBtn)) return 'btn_mute';
+    if (pointInRect(x, y, HUD_LAYOUT.guideBtn)) return 'btn_guide';
+
+    const layout = callbacks.getLayout();
+    for (const st of layout.stations) {
+      if (st.kind === 'counter') continue;
+      if (pointInRect(x, y, stationRect(st))) return `st:${st.id}`;
     }
     return null;
   }
@@ -75,64 +72,25 @@ export function createInputController(canvas, callbacks) {
     pointer.hoverZone = zone;
     if (!zone) return;
 
-    if (zone === 'guide_close') {
-      callbacks.toggleGuide(false);
-      return;
-    }
-    if (zone.startsWith('shift_')) {
-      callbacks.selectShift(Number(zone.slice(6)));
-      return;
-    }
-    if (zone === 'title_start') {
-      callbacks.startService();
-      return;
-    }
-    if (zone === 'pause_resume') {
-      callbacks.togglePause();
-      return;
-    }
-    if (zone === 'pause_restart') {
-      callbacks.restartShift();
-      return;
-    }
-    if (zone === 'pause_title') {
-      callbacks.goToTitle();
-      return;
-    }
-    if (zone === 'summary_next') {
-      callbacks.nextShift();
-      return;
-    }
-    if (zone === 'summary_replay') {
-      callbacks.restartShift();
-      return;
-    }
-    if (zone === 'summary_endless') {
-      callbacks.startEndless();
-      return;
-    }
-
-    if (zone === 'btn_pause') callbacks.togglePause();
+    if (zone === 'guide_close') callbacks.toggleGuide(false);
+    else if (zone.startsWith('shift_')) callbacks.selectShift(Number(zone.slice(6)));
+    else if (zone === 'title_start') callbacks.startService();
+    else if (zone === 'pause_resume') callbacks.togglePause();
+    else if (zone === 'pause_restart') callbacks.restartShift();
+    else if (zone === 'pause_title') callbacks.goToTitle();
+    else if (zone === 'summary_next') callbacks.nextShift();
+    else if (zone === 'summary_replay') callbacks.restartShift();
+    else if (zone === 'summary_endless') callbacks.startEndless();
+    else if (zone === 'btn_pause') callbacks.togglePause();
     else if (zone === 'btn_mute') callbacks.toggleMute();
     else if (zone === 'btn_guide') callbacks.toggleGuide();
-    else if (zone === 'skillet_0') callbacks.interactSkillet(0);
-    else if (zone === 'skillet_1') callbacks.interactSkillet(1);
-    else if (zone === 'chop_board') callbacks.interactChop();
-    else if (zone === 'send_pass') callbacks.sendToPass();
-    else if (zone === 'clear_assembly') callbacks.clearAssembly();
-    else if (zone === 'assembly') callbacks.interactAssembly();
-    else if (zone === 'serve_pass') callbacks.servePass();
-    else if (zone === 'trash') callbacks.discard();
-    else if (zone.startsWith('bin_')) {
-      const idx = Number(zone.slice(4));
-      const item = INGREDIENTS[idx];
-      if (item) callbacks.pickIngredient(item.id);
-    }
+    else if (zone.startsWith('st:')) callbacks.commandStation(zone.slice(3));
   }
 
   function handleKeyDown(event) {
     callbacks.onUnlockAudio();
     const key = event.key.toLowerCase();
+    keysDown.add(key);
     const screen = callbacks.getScreen();
 
     if (callbacks.isGuideOpen()) {
@@ -181,34 +139,45 @@ export function createInputController(canvas, callbacks) {
 
     if (key >= '1' && key <= '8') {
       const item = INGREDIENTS[Number(key) - 1];
-      if (item) callbacks.pickIngredient(item.id);
-    } else if (key === 'c') {
-      callbacks.interactChop();
-    } else if (key === 'q') {
-      callbacks.interactSkillet(0);
-    } else if (key === 'e') {
-      callbacks.interactSkillet(1);
-    } else if (key === 'a') {
-      callbacks.interactAssembly();
-    } else if (key === ' ' || key === 'enter') {
+      if (item) callbacks.commandStation(`pantry_${item.id}`);
+    } else if (key === ' ' || key === 'e' || key === 'enter') {
       event.preventDefault();
-      callbacks.servePass();
+      callbacks.interactFocused();
+    } else if (key === 'q') {
+      callbacks.dashChef();
     } else if (key === 'x' || key === 'backspace') {
       event.preventDefault();
-      callbacks.discard();
+      callbacks.commandStation('trash_bin');
     }
+  }
+
+  function handleKeyUp(event) {
+    keysDown.delete(event.key.toLowerCase());
+  }
+
+  function getMoveDir() {
+    let x = 0;
+    let y = 0;
+    if (keysDown.has('a') || keysDown.has('arrowleft')) x -= 1;
+    if (keysDown.has('d') || keysDown.has('arrowright')) x += 1;
+    if (keysDown.has('w') || keysDown.has('arrowup')) y -= 1;
+    if (keysDown.has('s') || keysDown.has('arrowdown')) y += 1;
+    return { x, y };
   }
 
   canvas.addEventListener('pointermove', handlePointerMove);
   canvas.addEventListener('pointerdown', handlePointerDown);
   window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
 
   return {
     getPointer: () => pointer,
+    getMoveDir,
     destroy() {
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     },
   };
 }
