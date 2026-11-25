@@ -1,30 +1,17 @@
-// Top-down 2.5D Kyoto Open-Kitchen renderer for Yuzu & Hinoki across 3 lighting themes.
+// HUD, Top Order Rail, floating score popups, bottom status bar, and modal overlays
+// for Yuzu & Hinoki using textured washi paper & hinoki wood patterns.
 
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
-  GRID_COLS,
-  GRID_ROWS,
-  GRID_X0,
-  GRID_Y0,
   HUD_LAYOUT,
   INGREDIENT_MAP,
   RECIPES,
   RECIPE_MAP,
   SHIFTS,
-  TILE_H,
-  TILE_W,
 } from '../config/recipes.js';
-import { stationRect } from '../config/kitchenLayouts.js';
 import { SCREEN_PAUSED, SCREEN_SUMMARY, SCREEN_TITLE } from '../engine/gameLoop.js';
-import {
-  drawIcon,
-  drawIngredientSprite,
-  drawPlatedDish,
-  drawStationHardware,
-  drawTopDownChef,
-  roundedRectPath,
-} from './sprites.js';
+import { drawIcon, drawIngredientSprite, drawPlatedDish, roundedRectPath } from './sprites.js';
 
 const TICKET_TILTS = [-0.02, 0.016, -0.014, 0.019];
 
@@ -48,249 +35,7 @@ function drawPanel(ctx, rect, fill, border, radius = 10, lineWidth = 1.5) {
   }
 }
 
-export function createKitchenRenderer(canvas) {
-  const ctx = canvas.getContext('2d');
-
-  function renderFloorAndLighting(layout, clock) {
-    const theme = layout.theme;
-
-    // Outer architectural Kyoto timber & stucco frame
-    ctx.fillStyle = theme === 'lantern' ? '#12151c' : '#30251c';
-    ctx.fillRect(0, 112, CANVAS_WIDTH, CANVAS_HEIGHT - 112);
-
-    // Real 2.5D Kyoto Back Wall (y: 112..168) with timber beam, shoji windows, wall shelves & celadon backsplash
-    const wallGrad = ctx.createLinearGradient(0, 112, 0, 168);
-    if (theme === 'lantern') {
-      wallGrad.addColorStop(0, '#2a221c');
-      wallGrad.addColorStop(1, '#1e1915');
-    } else if (theme === 'afternoon') {
-      wallGrad.addColorStop(0, '#f2e0be');
-      wallGrad.addColorStop(1, '#dec392');
-    } else {
-      wallGrad.addColorStop(0, '#faf3e1');
-      wallGrad.addColorStop(1, '#ebe0c5');
-    }
-    ctx.fillStyle = wallGrad;
-    ctx.fillRect(20, 112, CANVAS_WIDTH - 40, 56);
-
-    // Top structural hinoki beam (y: 112..120) with brass joinery studs
-    const beamGrad = ctx.createLinearGradient(0, 112, 0, 121);
-    beamGrad.addColorStop(0, theme === 'lantern' ? '#4a301e' : '#8a5d32');
-    beamGrad.addColorStop(1, theme === 'lantern' ? '#26170d' : '#573719');
-    ctx.fillStyle = beamGrad;
-    ctx.fillRect(0, 112, CANVAS_WIDTH, 9);
-    for (let jx = 56; jx < CANVAS_WIDTH; jx += 180) {
-      ctx.fillStyle = '#d4aa5a';
-      ctx.beginPath();
-      ctx.arc(jx, 116.5, 2.1, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 3 Sunlit / Twilight Shoji Windows with wooden kumiko lattice frames (y: 121..150)
-    for (const wx of [92, 551, 1010]) {
-      const wy = 121;
-      const ww = 178;
-      const wh = 29;
-      ctx.fillStyle = theme === 'lantern' ? '#263447' : theme === 'afternoon' ? '#ffe094' : '#fffbe0';
-      roundedRectPath(ctx, wx, wy, ww, wh, 2);
-      ctx.fill();
-      if (theme === 'lantern') {
-        const moonGlow = ctx.createRadialGradient(wx + 90, wy + 12, 4, wx + 90, wy + 12, 75);
-        moonGlow.addColorStop(0, 'rgba(195, 222, 255, 0.36)');
-        moonGlow.addColorStop(1, 'rgba(38, 52, 71, 0)');
-        ctx.fillStyle = moonGlow;
-        ctx.fillRect(wx, wy, ww, wh);
-      } else {
-        const sunGlow = ctx.createLinearGradient(wx, wy, wx + ww, wy + wh);
-        sunGlow.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
-        sunGlow.addColorStop(1, 'rgba(255, 224, 140, 0.15)');
-        ctx.fillStyle = sunGlow;
-        ctx.fillRect(wx, wy, ww, wh);
-      }
-      ctx.strokeStyle = theme === 'lantern' ? '#3d2718' : '#7a5128';
-      ctx.lineWidth = 2.4;
-      ctx.strokeRect(wx, wy, ww, wh);
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(wx, wy + wh * 0.5);
-      ctx.lineTo(wx + ww, wy + wh * 0.5);
-      for (let kx = wx + 30; kx < wx + ww; kx += 30) {
-        ctx.moveTo(kx, wy);
-        ctx.lineTo(kx, wy + wh);
-      }
-      ctx.stroke();
-    }
-
-    // 2 Hinoki Wall Shelves with stacked celadon bowls & ceramic spice jars (y: 124..148)
-    for (const sx of [318, 774]) {
-      ctx.fillStyle = theme === 'lantern' ? '#4f331e' : '#85582e';
-      ctx.fillRect(sx, 143, 188, 5);
-      ctx.fillStyle = 'rgba(15, 10, 5, 0.35)';
-      ctx.fillRect(sx + 18, 148, 8, 5);
-      ctx.fillRect(sx + 162, 148, 8, 5);
-      // Stacked celadon bowls
-      for (let b = 0; b < 3; b += 1) {
-        ctx.fillStyle = b === 2 ? '#e4f0e8' : '#a8ccb7';
-        roundedRectPath(ctx, sx + 18, 137 - b * 4.5, 24, 6, 3);
-        ctx.fill();
-      }
-      // Ceramic sake & shoyu flasks + spice tins
-      for (const [dx, col, h] of [[66, '#7a4928', 15], [90, '#466e5c', 13], [116, '#c77d32', 12], [142, '#2b241f', 16], [164, '#d9b568', 11]]) {
-        ctx.fillStyle = col;
-        roundedRectPath(ctx, sx + dx, 143 - h, 14, h, 3);
-        ctx.fill();
-        ctx.fillStyle = 'rgba(255, 250, 232, 0.35)';
-        ctx.fillRect(sx + dx + 3, 145 - h, 3, h - 4);
-      }
-    }
-
-    // Celadon/Mint Glazed Subway Backsplash Strip (y: 150..164)
-    ctx.fillStyle = theme === 'lantern' ? '#2c4744' : '#c6e2d2';
-    ctx.fillRect(20, 150, CANVAS_WIDTH - 40, 14);
-    ctx.strokeStyle = theme === 'lantern' ? 'rgba(255,255,255,0.12)' : 'rgba(72, 104, 88, 0.25)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(20, 157);
-    ctx.lineTo(CANVAS_WIDTH - 20, 157);
-    for (let tx = 44; tx < CANVAS_WIDTH - 20; tx += 36) {
-      ctx.moveTo(tx, 150);
-      ctx.lineTo(tx, 164);
-    }
-    ctx.stroke();
-
-    // Baseboard Floor/Wall Seam (y: 164..168) + soft downward shadow onto Row 0
-    ctx.fillStyle = theme === 'lantern' ? '#1c140e' : '#573a1d';
-    ctx.fillRect(20, 164, CANVAS_WIDTH - 40, 4);
-
-    // Continuous 2.5D Kyoto Open-Kitchen Floor (y: 168..672)
-    const floorX = GRID_X0 - 8;
-    const floorY = GRID_Y0;
-    const floorW = GRID_COLS * TILE_W + 16;
-    const floorH = GRID_ROWS * TILE_H;
-
-    const floorGrad = ctx.createLinearGradient(0, floorY, 0, floorY + floorH);
-    if (theme === 'lantern') {
-      floorGrad.addColorStop(0, '#362d26');
-      floorGrad.addColorStop(1, '#26201b');
-    } else if (theme === 'afternoon') {
-      floorGrad.addColorStop(0, '#ecd4a8');
-      floorGrad.addColorStop(1, '#dab67e');
-    } else {
-      floorGrad.addColorStop(0, '#f7ecd3');
-      floorGrad.addColorStop(1, '#e8d4ab');
-    }
-    ctx.fillStyle = floorGrad;
-    roundedRectPath(ctx, floorX, floorY, floorW, floorH, 8);
-    ctx.fill();
-
-    ctx.save();
-    ctx.beginPath();
-    roundedRectPath(ctx, floorX, floorY, floorW, floorH, 8);
-    ctx.clip();
-
-    // Floor shadow directly below back wall seam
-    const wallAo = ctx.createLinearGradient(0, floorY, 0, floorY + 26);
-    wallAo.addColorStop(0, 'rgba(18, 12, 6, 0.28)');
-    wallAo.addColorStop(1, 'rgba(18, 12, 6, 0)');
-    ctx.fillStyle = wallAo;
-    ctx.fillRect(floorX, floorY, floorW, 26);
-
-    // Warm hinoki wood planks across floor with staggered plank seams
-    ctx.strokeStyle = theme === 'lantern' ? 'rgba(255, 224, 178, 0.07)' : 'rgba(145, 102, 52, 0.14)';
-    ctx.lineWidth = 1.1;
-    const plankH = 28;
-    for (let py = floorY + plankH, rowIdx = 0; py < floorY + floorH; py += plankH, rowIdx += 1) {
-      ctx.beginPath();
-      ctx.moveTo(floorX, py);
-      ctx.lineTo(floorX + floorW, py);
-      ctx.stroke();
-      const offset = (rowIdx % 2) * 68;
-      for (let px = floorX + offset + 68; px < floorX + floorW; px += 136) {
-        ctx.beginPath();
-        ctx.moveTo(px, py - plankH);
-        ctx.lineTo(px, py);
-        ctx.stroke();
-      }
-    }
-
-    // Crisp Celadon/Mint Glazed Ceramic Tile Inlay Zones (breaks out of Copper/Saffron/Ember palette!)
-    const tileLight = theme === 'lantern' ? 'rgba(54, 92, 88, 0.44)' : 'rgba(182, 222, 200, 0.62)';
-    const tileAlt = theme === 'lantern' ? 'rgba(42, 74, 72, 0.44)' : 'rgba(154, 204, 178, 0.56)';
-    const drawCeladonStrip = (c0, r0, wC, hR) => {
-      const sx = GRID_X0 + c0 * TILE_W;
-      const sy = GRID_Y0 + r0 * TILE_H;
-      const tw = TILE_W / 2;
-      const th = TILE_H / 2;
-      for (let r = 0; r < hR * 2; r += 1) {
-        for (let c = 0; c < wC * 2; c += 1) {
-          ctx.fillStyle = (r + c) % 2 === 0 ? tileLight : tileAlt;
-          ctx.fillRect(sx + c * tw + 1, sy + r * th + 1, tw - 2, th - 2);
-        }
-      }
-    };
-
-    if (theme === 'lantern') {
-      drawCeladonStrip(3, 1, 12, 1);
-      drawCeladonStrip(3, 2, 2, 2);
-      drawCeladonStrip(13, 2, 2, 2);
-      drawCeladonStrip(1, 4, 16, 1);
-    } else {
-      drawCeladonStrip(1, 1, 16, 1);
-      drawCeladonStrip(1, 4, 16, 1);
-    }
-
-    // Woven anti-slip kitchen runner mats aligned to open aisles
-    const runners = theme === 'lantern'
-      ? [
-          { x: GRID_X0 + 3 * TILE_W + 10, y: GRID_Y0 + 1 * TILE_H + 10, w: 11 * TILE_W - 20, h: TILE_H - 20 },
-          { x: GRID_X0 + 1 * TILE_W + 10, y: GRID_Y0 + 4 * TILE_H + 10, w: 15 * TILE_W - 20, h: TILE_H - 20 },
-        ]
-      : [
-          { x: GRID_X0 + 18, y: GRID_Y0 + 1 * TILE_H + 10, w: GRID_COLS * TILE_W - 36, h: TILE_H - 20 },
-          { x: GRID_X0 + 18, y: GRID_Y0 + 4 * TILE_H + 10, w: GRID_COLS * TILE_W - 36, h: TILE_H - 20 },
-        ];
-    for (const rm of runners) {
-      ctx.fillStyle = theme === 'lantern' ? 'rgba(18, 24, 30, 0.72)' : 'rgba(38, 64, 52, 0.22)';
-      roundedRectPath(ctx, rm.x, rm.y, rm.w, rm.h, 9);
-      ctx.fill();
-      ctx.save();
-      ctx.setLineDash([8, 6]);
-      ctx.strokeStyle = theme === 'lantern' ? 'rgba(224, 174, 96, 0.34)' : 'rgba(228, 198, 134, 0.56)';
-      ctx.lineWidth = 1.4;
-      roundedRectPath(ctx, rm.x + 4, rm.y + 4, rm.w - 8, rm.h - 8, 6);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    if (theme === 'daylight' || theme === 'afternoon') {
-      // Slanting sunlight shafts directly from the 3 back-wall shoji windows
-      ctx.fillStyle = theme === 'afternoon' ? 'rgba(255, 208, 114, 0.28)' : 'rgba(255, 252, 222, 0.36)';
-      for (const sx of [96, 556, 1016]) {
-        ctx.beginPath();
-        ctx.moveTo(sx, floorY);
-        ctx.lineTo(sx + 174, floorY);
-        ctx.lineTo(sx + 340, floorY + floorH);
-        ctx.lineTo(sx + 166, floorY + floorH);
-        ctx.closePath();
-        ctx.fill();
-      }
-    } else {
-      // Real warm orange-gold lantern pools cast onto the timber & celadon floor
-      const pulse = 0.92 + Math.sin(clock * 2.5) * 0.08;
-      for (const [lx, ly] of [[68, 250], [68, 490], [430, 175], [850, 175], [1180, 250], [1180, 490]]) {
-        const lg = ctx.createRadialGradient(lx, ly, 10, lx, ly, 230 * pulse);
-        lg.addColorStop(0, 'rgba(255, 168, 64, 0.42)');
-        lg.addColorStop(0.55, 'rgba(255, 140, 44, 0.16)');
-        lg.addColorStop(1, 'rgba(255, 140, 44, 0)');
-        ctx.fillStyle = lg;
-        ctx.beginPath();
-        ctx.arc(lx, ly, 230, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-  }
-
+export function createHudRenderer(ctx, textures) {
   function renderTopRail(orders, audioMuted, clock, hoverZone) {
     const railGrad = ctx.createLinearGradient(0, 0, 0, 112);
     railGrad.addColorStop(0, '#18211d');
@@ -301,7 +46,8 @@ export function createKitchenRenderer(canvas) {
     ctx.fillStyle = '#c89f56';
     ctx.fillRect(14, 5, 704, 3.5);
 
-    // 4 Washi paper order tickets with clean internal padding
+    const washiPat = textures?.patterns?.washiPaper ?? '#fcf8ee';
+
     for (let i = 0; i < HUD_LAYOUT.tickets.length; i += 1) {
       const box = HUD_LAYOUT.tickets[i];
       const ticket = orders.tickets[i];
@@ -318,8 +64,9 @@ export function createKitchenRenderer(canvas) {
 
       const recipe = RECIPE_MAP[ticket.recipeId];
       const ratio = Math.max(0, Math.min(1, ticket.patience / ticket.maxPatience));
-      const isUrgent = ratio < 0.30;
-      const pulse = isUrgent ? 0.5 + Math.sin(clock * 11) * 0.5 : 0;
+      const isCritical = ratio < 0.28;
+      const isUrgent = ratio < 0.48;
+      const pulse = isCritical ? 0.5 + Math.sin(clock * 11) * 0.5 : 0;
 
       ctx.save();
       const px = box.x + box.w / 2;
@@ -328,12 +75,15 @@ export function createKitchenRenderer(canvas) {
       ctx.rotate(tilt);
       ctx.translate(-px, -py);
 
-      const bg = isUrgent
-        ? `rgb(255, ${Math.round(234 - pulse * 28)}, ${Math.round(218 - pulse * 30)})`
-        : '#fcf8ee';
-      drawPanel(ctx, box, bg, isUrgent ? '#e5484d' : '#c9a66b', 9, isUrgent ? 2.4 : 1.4);
+      const bg = isCritical
+        ? `rgb(255, ${Math.round(226 - pulse * 28)}, ${Math.round(206 - pulse * 30)})`
+        : isUrgent
+          ? '#fff0cc'
+          : washiPat;
+      const borderCol = isCritical ? '#e5484d' : isUrgent ? '#eb8b1e' : '#c9a66b';
+      drawPanel(ctx, box, bg, borderCol, 9, isUrgent ? 2.4 : 1.4);
 
-      ctx.fillStyle = recipe.badgeBg;
+      ctx.fillStyle = isCritical ? '#b3282d' : isUrgent ? '#b85a10' : recipe.badgeBg;
       roundedRectPath(ctx, box.x + 6, box.y + 6, box.w - 12, 19, 5);
       ctx.fill();
 
@@ -361,7 +111,7 @@ export function createKitchenRenderer(canvas) {
         const step = recipe.steps[sIdx];
         const ing = INGREDIENT_MAP[step.ingredientId];
         const sy = box.y + 33 + sIdx * 16;
-        ctx.fillStyle = '#efe7d3';
+        ctx.fillStyle = isUrgent ? '#f7dfb0' : '#efe7d3';
         roundedRectPath(ctx, box.x + 58, sy - 4, 100, 13, 4);
         ctx.fill();
 
@@ -395,7 +145,7 @@ export function createKitchenRenderer(canvas) {
       ctx.fillStyle = '#dfd6be';
       roundedRectPath(ctx, barX, barY, barW, 7, 3.5);
       ctx.fill();
-      ctx.fillStyle = ratio > 0.55 ? '#2ebd6b' : ratio > 0.30 ? '#f2b632' : '#e5484d';
+      ctx.fillStyle = ratio > 0.48 ? '#2ebd6b' : ratio > 0.28 ? '#f29524' : '#e5484d';
       roundedRectPath(ctx, barX, barY, Math.max(6, barW * ratio), 7, 3.5);
       ctx.fill();
       ctx.restore();
@@ -467,123 +217,7 @@ export function createKitchenRenderer(canvas) {
     ctx.fillRect(0, 110, CANVAS_WIDTH, 2);
   }
 
-  function renderKitchenWorld(kitchen, orders, chef, layout, hoverZone, clock) {
-    // High-contrast dual-stroke dotted route line
-    if (chef.path.length > 0) {
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.setLineDash([10, 8]);
-      ctx.strokeStyle = 'rgba(20, 14, 6, 0.55)';
-      ctx.lineWidth = 6.5;
-      ctx.beginPath();
-      ctx.moveTo(chef.x, chef.y);
-      for (const wp of chef.path) ctx.lineTo(wp.x, wp.y);
-      ctx.stroke();
-      ctx.strokeStyle = 'rgba(255, 232, 134, 0.94)';
-      ctx.lineWidth = 4.2;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      const dest = chef.path[chef.path.length - 1];
-      const ringR = 12 + Math.sin(clock * 8) * 2.2;
-      ctx.strokeStyle = 'rgba(255, 234, 146, 0.95)';
-      ctx.lineWidth = 2.6;
-      ctx.beginPath();
-      ctx.arc(dest.x, dest.y, ringR, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // 2.5D Y-sorted drawables so the 1.62x chef passes behind/in front of kitchen islands naturally
-    const drawList = layout.stations.map((st) => {
-      const rect = stationRect(st);
-      return {
-        sortY: rect.y + rect.h,
-        draw: () => drawStationHardware(
-          ctx,
-          st,
-          rect,
-          kitchen,
-          orders,
-          clock,
-          chef.focusedStationId === st.id,
-          hoverZone === `st:${st.id}`,
-        ),
-      };
-    });
-    drawList.push({
-      sortY: chef.y + 22,
-      draw: () => drawTopDownChef(ctx, chef, kitchen.heldItem, clock),
-    });
-    drawList.sort((a, b) => a.sortY - b.sortY);
-    for (let i = 0; i < drawList.length; i += 1) {
-      drawList[i].draw();
-    }
-
-    // Real warm lantern illumination pass + soft evening vignette on Lantern Dinner Service
-    if (layout.theme === 'lantern') {
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      for (const [lx, ly] of [[68, 250], [68, 490], [430, 175], [850, 175], [1180, 250], [1180, 490]]) {
-        const glow = ctx.createRadialGradient(lx, ly, 8, lx, ly, 195);
-        glow.addColorStop(0, 'rgba(255, 165, 62, 0.14)');
-        glow.addColorStop(1, 'rgba(255, 140, 44, 0)');
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(lx, ly, 195, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      const vig = ctx.createRadialGradient(640, 400, 340, 640, 400, 740);
-      vig.addColorStop(0, 'rgba(8, 10, 16, 0)');
-      vig.addColorStop(1, 'rgba(8, 10, 16, 0.34)');
-      ctx.fillStyle = vig;
-      ctx.fillRect(0, 112, CANVAS_WIDTH, CANVAS_HEIGHT - 112);
-
-      for (const [lx, ly] of [[16, 224], [16, 464], [1264, 224], [1264, 464], [430, 128], [850, 128]]) {
-        ctx.fillStyle = '#381608';
-        ctx.fillRect(lx - 6, ly - 17, 12, 4);
-        ctx.fillRect(lx - 5, ly + 13, 10, 3);
-        ctx.fillStyle = '#ff8c38';
-        ctx.beginPath();
-        ctx.ellipse(lx, ly, 11, 14, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#471808';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.fillStyle = '#ffe99e';
-        ctx.beginPath();
-        ctx.ellipse(lx, ly, 5.5, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-  }
-
-  function renderParticlesAndStatus(kitchen, layout) {
-    for (let i = 0; i < kitchen.particles.length; i += 1) {
-      const p = kitchen.particles[i];
-      const alpha = Math.max(0, p.life / p.maxLife);
-      ctx.save();
-      if (p.kind === 'steam') {
-        ctx.globalAlpha = alpha * 0.78;
-        ctx.strokeStyle = p.color;
-        ctx.lineWidth = Math.max(2.8, p.size * 0.52);
-        ctx.lineCap = 'round';
-        const wave = Math.sin((p.phase ?? 0) + p.life * 9) * 6;
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
-        ctx.quadraticCurveTo(p.x + wave, p.y - 10, p.x - wave * 0.55, p.y - 20);
-        ctx.stroke();
-      } else {
-        ctx.globalAlpha = alpha * 0.94;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-
+  function renderPopupsAndStatusBar(kitchen, layout) {
     for (let i = 0; i < kitchen.popups.length; i += 1) {
       const pop = kitchen.popups[i];
       const alpha = Math.min(1, (pop.life / pop.maxLife) * 1.45);
@@ -604,7 +238,7 @@ export function createKitchenRenderer(canvas) {
     }
 
     const sb = HUD_LAYOUT.statusBar;
-    drawPanel(ctx, sb, 'rgba(22, 30, 25, 0.94)', 'rgba(162, 190, 158, 0.35)', 8, 1.2);
+    drawPanel(ctx, sb, 'rgba(22, 30, 25, 0.95)', 'rgba(162, 190, 158, 0.35)', 8, 1.2);
     let textX = sb.x + 14;
     if (kitchen.heldItem) {
       const pill = { x: sb.x + 6, y: sb.y + 3, w: 232, h: sb.h - 6 };
@@ -650,7 +284,7 @@ export function createKitchenRenderer(canvas) {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#a8cfa3';
     ctx.font = '800 14px "Trebuchet MS", sans-serif';
-    ctx.fillText('SUNLIT KYOTO OPEN-KITCHEN', 640, 110);
+    ctx.fillText('LIVING KYOTO IZAKAYA KITCHEN', 640, 110);
 
     ctx.fillStyle = '#fbf7ec';
     ctx.font = '900 52px "Trebuchet MS", sans-serif';
@@ -787,20 +421,24 @@ export function createKitchenRenderer(canvas) {
   }
 
   function renderShiftSummaryOverlay(orders, hoverZone) {
-    ctx.fillStyle = 'rgba(24, 19, 13, 0.34)';
+    ctx.fillStyle = 'rgba(20, 16, 11, 0.30)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     drawPanel(ctx, { x: 120, y: 58, w: 1040, h: 604 }, 'rgba(22, 33, 27, 0.96)', '#d9b568', 22, 3.2);
-    drawPanel(ctx, { x: 132, y: 70, w: 1016, h: 580 }, null, 'rgba(217, 181, 104, 0.28)', 16, 1.4);
+    drawPanel(ctx, { x: 132, y: 70, w: 1016, h: 580 }, null, 'rgba(217, 181, 104, 0.34)', 16, 1.4);
 
-    // Flanking culinary showcase dishes inside modal header
+    // Warm hinoki timber header accent bar inside Shift Complete modal
+    if (textures?.patterns?.hinokiWood) {
+      drawPanel(ctx, { x: 400, y: 76, w: 480, h: 34 }, textures.patterns.hinokiWood, '#8a5d2e', 8, 1.5);
+    }
+
     drawPlatedDish(ctx, 'yuzu_ramen', ['noodles', 'yuzu', 'scallion'], 248, 178, 56, { showPlate: true, glow: true });
     drawPlatedDish(ctx, 'teriyaki_salmon', ['rice', 'salmon', 'yuzu'], 1032, 178, 56, { showPlate: true, glow: true });
 
     const shift = SHIFTS[orders.shiftIndex] ?? SHIFTS[0];
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#b4d6af';
-    ctx.font = '800 15px "Trebuchet MS", sans-serif';
-    ctx.fillText(shift.name.toUpperCase(), 640, 114);
+    ctx.fillStyle = textures?.patterns?.hinokiWood ? '#2d1c0c' : '#b4d6af';
+    ctx.font = '900 14.5px "Trebuchet MS", sans-serif';
+    ctx.fillText(shift.name.toUpperCase(), 640, 98);
 
     ctx.fillStyle = '#fbf7ec';
     ctx.font = '900 46px "Trebuchet MS", sans-serif';
@@ -812,7 +450,7 @@ export function createKitchenRenderer(canvas) {
       const sy = 228;
       if (lit) {
         const starGlow = ctx.createRadialGradient(sx, sy, 6, sx, sy, 46);
-        starGlow.addColorStop(0, 'rgba(255, 215, 80, 0.54)');
+        starGlow.addColorStop(0, 'rgba(255, 215, 80, 0.56)');
         starGlow.addColorStop(1, 'rgba(255, 215, 80, 0)');
         ctx.fillStyle = starGlow;
         ctx.beginPath();
@@ -863,21 +501,24 @@ export function createKitchenRenderer(canvas) {
     }
   }
 
-  function render(state) {
-    const { kitchen, orders, chef, layout, screen, selectedShift, audioMuted, guideOpen, pointer, clock } = state;
+  function renderHud(state) {
+    const { kitchen, orders, layout, screen, selectedShift, audioMuted, guideOpen, pointer, clock, sceneManager } = state;
 
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    renderFloorAndLighting(layout, clock);
     renderTopRail(orders, audioMuted, clock, pointer.hoverZone);
-    renderKitchenWorld(kitchen, orders, chef, layout, pointer.hoverZone, clock);
-    renderParticlesAndStatus(kitchen, layout);
+    renderPopupsAndStatusBar(kitchen, layout);
 
     if (screen === SCREEN_TITLE) renderTitleOverlay(selectedShift, pointer.hoverZone, clock);
     else if (screen === SCREEN_PAUSED) renderPauseOverlay(pointer.hoverZone);
     else if (screen === SCREEN_SUMMARY) renderShiftSummaryOverlay(orders, pointer.hoverZone);
 
     if (guideOpen) renderGuideOverlay();
+
+    const fade = sceneManager?.getTransitionAlpha ? sceneManager.getTransitionAlpha() : 0;
+    if (fade > 0) {
+      ctx.fillStyle = `rgba(18, 22, 18, ${fade * 0.4})`;
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    }
   }
 
-  return { render };
+  return { renderHud };
 }

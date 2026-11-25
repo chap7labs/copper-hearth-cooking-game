@@ -1,7 +1,8 @@
 // Entry module for Yuzu & Hinoki: depth-first wiring of recipes, spatial layouts,
-// game loop, top-down chef controller, stations, orders, input, sprites, renderer, and audio.
+// game loop, scene manager, texture atlas, top-down/3/4 chef controller, stations, orders,
+// input, sprites, world/HUD renderers, and Web Audio.
 
-import { FIXED_STEP, SHIFTS } from './config/recipes.js';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, FIXED_STEP, SHIFTS } from './config/recipes.js';
 import { buildWalkGrid, getLayout } from './config/kitchenLayouts.js';
 import {
   SCREEN_PAUSED,
@@ -10,6 +11,7 @@ import {
   SCREEN_TITLE,
   createGameLoop,
 } from './engine/gameLoop.js';
+import { createSceneManager } from './engine/sceneManager.js';
 import {
   commandChefToStation,
   createChef,
@@ -30,7 +32,9 @@ import {
   updateOrders,
 } from './systems/orderManager.js';
 import { createInputController } from './systems/inputController.js';
-import { createKitchenRenderer } from './art/renderer.js';
+import { createTextureAtlas } from './art/textures.js';
+import { createWorldRenderer } from './art/worldRenderer.js';
+import { createHudRenderer } from './art/hudRenderer.js';
 import { createSoundEngine } from './audio/soundEngine.js';
 
 const params = new URLSearchParams(window.location.search);
@@ -38,6 +42,7 @@ const seedParam = Number.parseInt(params.get('seed') ?? '', 10);
 const seed = Number.isInteger(seedParam) ? seedParam : 20261125;
 
 const canvas = document.getElementById('kitchen-canvas');
+const ctx = canvas.getContext('2d');
 const statusEl = document.getElementById('status');
 
 let selectedShift = 0;
@@ -47,10 +52,10 @@ let walkGrid = buildWalkGrid(activeLayout);
 const chef = createChef(activeLayout);
 const kitchen = createKitchenState(activeLayout);
 const orders = createOrderManager(seed);
-const renderer = createKitchenRenderer(canvas);
+const textures = createTextureAtlas(ctx);
+const worldRenderer = createWorldRenderer(ctx, textures);
+const hudRenderer = createHudRenderer(ctx, textures);
 const audio = createSoundEngine();
-
-let guideOpen = false;
 
 function announce(text) {
   if (statusEl) statusEl.textContent = text;
@@ -62,6 +67,7 @@ function handleGameEvent(type, payload = {}) {
     announce(`Picked ${payload.ingredientId}.`);
   } else if (type === 'chop' || type === 'chop_done') {
     audio.playChop();
+    sceneManager.triggerShake(1.6, 0.1);
     if (type === 'chop_done') announce(`Chopped ${payload.ingredientId}.`);
   } else if (type === 'cook_start') {
     audio.playCookStart(payload.cookType);
@@ -74,21 +80,22 @@ function handleGameEvent(type, payload = {}) {
     else if (type === 'ready_to_serve') announce(`Ready on pass: ${payload.recipeId}.`);
   } else if (type === 'serve_success') {
     audio.playBellServe(payload.combo ?? 1);
+    sceneManager.triggerShake(2.4, 0.14);
     announce(`Served ${payload.recipeId}. Earnings $${orders.score}. Combo x${orders.combo}.`);
   } else if (type === 'new_ticket') audio.playNewTicket();
   else if (type === 'trash') {
     audio.playTrash();
     announce('Discarded item.');
-  }
-  else if (type === 'ticket_expired') {
+  } else if (type === 'ticket_expired') {
     audio.playError();
     announce(`Ticket ${payload.ticketNumber ?? ''} expired.`);
   } else if (type === 'burnt' || type === 'error') {
     audio.playError();
+    if (type === 'burnt') sceneManager.triggerShake(3.2, 0.2);
     if (kitchen.banner?.text) announce(`Notice: ${kitchen.banner.text}`);
   } else if (type === 'shift_complete') {
     audio.playShiftComplete();
-    loop.setScreen(SCREEN_SUMMARY);
+    sceneManager.setScreen(SCREEN_SUMMARY);
     announce(`Shift complete. Score $${orders.score}, ${orders.starsEarned} stars.`);
   }
 }
@@ -112,21 +119,22 @@ function beginShift(index) {
   resetChef(chef, activeLayout);
   resetKitchenState(kitchen, activeLayout);
   startShift(orders, selectedShift);
-  guideOpen = false;
-  loop.setScreen(SCREEN_PLAYING);
+  sceneManager.setScreen(SCREEN_PLAYING);
   announce(`Started ${shift.name}.`);
 }
 
 const loop = createGameLoop({
   step: FIXED_STEP,
   onUpdate(dt) {
-    if (guideOpen) return;
+    sceneManager.update(dt);
+    if (sceneManager.isGuideOpen()) return;
     updateChef(chef, dt, activeLayout, walkGrid, input.getMoveDir(), (st) => interactAt(st));
     updateKitchenState(kitchen, dt, activeLayout, handleGameEvent);
     updateOrders(orders, dt, handleGameEvent);
   },
   onRender(screen, clock) {
-    renderer.render({
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    const frameState = {
       kitchen,
       orders,
       chef,
@@ -134,17 +142,22 @@ const loop = createGameLoop({
       screen,
       selectedShift,
       audioMuted: audio.isMuted(),
-      guideOpen,
+      guideOpen: sceneManager.isGuideOpen(),
       pointer: input.getPointer(),
       clock,
-    });
+      sceneManager,
+    };
+    worldRenderer.renderWorld(frameState);
+    hudRenderer.renderHud(frameState);
   },
 });
 
+const sceneManager = createSceneManager(loop);
+
 const input = createInputController(canvas, {
-  getScreen: () => loop.getScreen(),
+  getScreen: () => sceneManager.getScreen(),
   getLayout: () => activeLayout,
-  isGuideOpen: () => guideOpen,
+  isGuideOpen: () => sceneManager.isGuideOpen(),
   onUnlockAudio: () => audio.unlock(),
   selectShift: (index) => {
     selectedShift = Math.max(0, Math.min(SHIFTS.length - 1, index));
@@ -158,24 +171,21 @@ const input = createInputController(canvas, {
   nextShift: () => beginShift(orders.shiftIndex < SHIFTS.length - 1 ? orders.shiftIndex + 1 : 0),
   startEndless: () => beginShift(SHIFTS.length - 1),
   goToTitle: () => {
-    guideOpen = false;
-    loop.setScreen(SCREEN_TITLE);
+    sceneManager.setScreen(SCREEN_TITLE);
     announce('Returned to Yuzu and Hinoki menu.');
   },
   togglePause: () => {
-    const cur = loop.getScreen();
+    const cur = sceneManager.getScreen();
     if (cur === SCREEN_PLAYING) {
-      loop.setScreen(SCREEN_PAUSED);
+      sceneManager.setScreen(SCREEN_PAUSED);
       announce('Game paused.');
     } else if (cur === SCREEN_PAUSED) {
-      loop.setScreen(SCREEN_PLAYING);
+      sceneManager.setScreen(SCREEN_PLAYING);
       announce('Game resumed.');
     }
   },
   toggleMute: () => audio.setMuted(!audio.isMuted()),
-  toggleGuide: (force) => {
-    guideOpen = force === undefined ? !guideOpen : Boolean(force);
-  },
+  toggleGuide: (force) => sceneManager.toggleGuide(force),
   commandStation: (stationId) => {
     const res = commandChefToStation(chef, activeLayout, walkGrid, stationId);
     if (res === 'immediate') {
@@ -189,13 +199,16 @@ const input = createInputController(canvas, {
     if (st) interactAt(st);
   },
   dashChef: () => {
-    if (triggerChefDash(chef)) audio.playDash();
+    if (triggerChefDash(chef)) {
+      audio.playDash();
+      sceneManager.triggerShake(1.4, 0.1);
+    }
   },
 });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && loop.getScreen() === SCREEN_PLAYING) {
-    loop.setScreen(SCREEN_PAUSED);
+  if (document.hidden && sceneManager.getScreen() === SCREEN_PLAYING) {
+    sceneManager.setScreen(SCREEN_PAUSED);
   }
 });
 

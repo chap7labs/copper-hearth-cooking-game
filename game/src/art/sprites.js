@@ -102,40 +102,47 @@ export function drawIngredientSprite(ctx, ingredientId, prepState, x, y, scale =
   const isCooked = ['grilled', 'fried', 'boiled'].includes(prepState);
   const isChopped = prepState === 'chopped';
 
-  ctx.fillStyle = 'rgba(18, 12, 8, 0.3)';
+  ctx.fillStyle = 'rgba(14, 9, 5, 0.34)';
   ctx.beginPath();
-  ctx.ellipse(2, 9, 17, 6.5, 0, 0, Math.PI * 2);
+  ctx.ellipse(2, 9.5, 17, 6.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
   if (ingredientId === 'salmon') {
-    const grad = ctx.createLinearGradient(-16, -8, 16, 10);
+    // Diagonal coral-orange wedge fillet with crisp white marbling or dark grill marks
+    const grad = ctx.createLinearGradient(-16, -9, 16, 10);
     if (isBurnt) {
       grad.addColorStop(0, '#2a201d');
       grad.addColorStop(1, '#15100e');
     } else if (isCooked) {
-      grad.addColorStop(0, '#ffa169');
-      grad.addColorStop(1, '#b84320');
+      grad.addColorStop(0, '#ff8e53');
+      grad.addColorStop(1, '#bf3e1a');
     } else {
-      grad.addColorStop(0, '#ffa88f');
-      grad.addColorStop(1, '#eb684c');
+      grad.addColorStop(0, '#ff8c69');
+      grad.addColorStop(1, '#e85335');
     }
     ctx.fillStyle = grad;
     ctx.beginPath();
-    ctx.moveTo(-17, 1);
-    ctx.quadraticCurveTo(-12, -10, 14, -8);
-    ctx.quadraticCurveTo(18, 1, 13, 8);
-    ctx.quadraticCurveTo(-10, 10, -17, 1);
+    ctx.moveTo(-18, 4);
+    ctx.lineTo(-10, -10);
+    ctx.lineTo(17, -7);
+    ctx.lineTo(13, 9);
     ctx.closePath();
     ctx.fill();
     if (!isBurnt) {
-      ctx.strokeStyle = isCooked ? '#3b1509' : 'rgba(255, 240, 232, 0.75)';
-      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = isCooked ? '#361208' : '#fff4ed';
+      ctx.lineWidth = isCooked ? 2.2 : 1.7;
       for (const sx of [-7, 0, 7]) {
         ctx.beginPath();
-        ctx.moveTo(sx, -7);
-        ctx.lineTo(sx + 1, 7);
+        ctx.moveTo(sx, -8);
+        ctx.lineTo(sx + 2, 7.5);
         ctx.stroke();
       }
+      ctx.strokeStyle = 'rgba(255, 255, 245, 0.75)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-9, -7.5);
+      ctx.lineTo(12, -5.5);
+      ctx.stroke();
     }
   } else if (ingredientId === 'chicken') {
     if (isBurnt) {
@@ -144,33 +151,29 @@ export function drawIngredientSprite(ctx, ingredientId, prepState, x, y, scale =
       ctx.ellipse(0, 1, 16, 10, 0, 0, Math.PI * 2);
       ctx.fill();
     } else if (prepState === 'fried') {
-      // Golden crispy panko chicken katsu cutlet
       ctx.fillStyle = '#d98a29';
-      ctx.beginPath();
-      ctx.ellipse(0, 1, 17, 11, -0.1, 0, Math.PI * 2);
+      roundedRectPath(ctx, -17, -9, 34, 19, 7);
       ctx.fill();
-      ctx.fillStyle = '#f5bd51';
-      ctx.beginPath();
-      ctx.ellipse(-1, -1, 14, 8, -0.1, 0, Math.PI * 2);
+      ctx.fillStyle = '#f8c354';
+      roundedRectPath(ctx, -15, -10, 30, 16, 6);
       ctx.fill();
-      ctx.strokeStyle = '#995816';
-      ctx.lineWidth = 1.6;
-      for (const gx of [-6, 0, 6]) {
+      ctx.strokeStyle = '#854612';
+      ctx.lineWidth = 1.8;
+      for (const gx of [-7, 0, 7]) {
         ctx.beginPath();
-        ctx.moveTo(gx, -7);
-        ctx.lineTo(gx + 2, 7);
+        ctx.moveTo(gx, -8);
+        ctx.lineTo(gx, 7);
         ctx.stroke();
       }
     } else if (prepState === 'grilled') {
-      // Skewered smoky yakitori chicken
-      ctx.strokeStyle = '#d9be8b';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#e5c88e';
+      ctx.lineWidth = 2.2;
       ctx.beginPath();
       ctx.moveTo(-18, 3);
       ctx.lineTo(18, -3);
       ctx.stroke();
       for (const [cx, cy] of [[-7, 1], [1, 0], [9, -1]]) {
-        ctx.fillStyle = '#964720';
+        ctx.fillStyle = '#9c481f';
         ctx.beginPath();
         ctx.arc(cx, cy, 5.2, 0, Math.PI * 2);
         ctx.fill();
@@ -178,38 +181,58 @@ export function drawIngredientSprite(ctx, ingredientId, prepState, x, y, scale =
         ctx.fillRect(cx - 3, cy - 1, 6, 2);
       }
     } else {
-      // Raw heritage chicken cut
-      ctx.fillStyle = '#f5cbb8';
+      // Distinct bone-in cream drumstick/thigh silhouette (not a pink oval!)
+      ctx.fillStyle = '#fff9ee';
+      ctx.fillRect(4, -3, 12, 6);
       ctx.beginPath();
-      ctx.ellipse(0, 1, 15, 10, -0.15, 0, Math.PI * 2);
+      ctx.arc(16, -2.5, 3.2, 0, Math.PI * 2);
+      ctx.arc(16, 2.5, 3.2, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#ffe5d9';
+      ctx.fillStyle = '#f5dec2';
       ctx.beginPath();
-      ctx.ellipse(-3, -2, 8, 4, -0.15, 0, Math.PI * 2);
+      ctx.ellipse(-4, 0, 12.5, 10, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#c4966c';
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+      ctx.fillStyle = '#fff6e8';
+      ctx.beginPath();
+      ctx.ellipse(-7, -3.5, 6, 3.2, -0.2, 0, Math.PI * 2);
       ctx.fill();
     }
   } else if (ingredientId === 'shrimp') {
-    const col = isBurnt ? '#261e1c' : isCooked ? '#f2a438' : '#f79579';
-    ctx.fillStyle = col;
-    ctx.beginPath();
-    ctx.ellipse(-2, 0, 15, 8, -0.3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = isBurnt ? '#1c1514' : '#e0503c';
-    ctx.beginPath();
-    ctx.moveTo(11, -4);
-    ctx.lineTo(18, -8);
-    ctx.lineTo(17, 1);
-    ctx.closePath();
-    ctx.fill();
-    if (!isBurnt && !isCooked) {
-      ctx.strokeStyle = '#fff0e6';
-      ctx.lineWidth = 1.4;
-      for (const sx of [-7, -1, 5]) {
-        ctx.beginPath();
-        ctx.moveTo(sx, -5);
-        ctx.lineTo(sx + 1, 5);
-        ctx.stroke();
-      }
+    if (isBurnt) {
+      ctx.fillStyle = '#261e1c';
+      ctx.beginPath();
+      ctx.arc(0, 2, 13, Math.PI * 0.9, Math.PI * 2.1);
+      ctx.lineWidth = 9;
+      ctx.strokeStyle = '#261e1c';
+      ctx.stroke();
+    } else {
+      // C-curved tiger prawn with coral-white banding and crimson flared fan tail
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = isCooked ? '#eb9324' : '#f45d48';
+      ctx.lineWidth = 10.5;
+      ctx.beginPath();
+      ctx.arc(-1, 3, 11, Math.PI * 0.92, Math.PI * 1.98);
+      ctx.stroke();
+      ctx.strokeStyle = isCooked ? '#ffd466' : '#fff3ea';
+      ctx.lineWidth = 4.2;
+      ctx.setLineDash([3, 5]);
+      ctx.beginPath();
+      ctx.arc(-1, 3, 11, Math.PI * 0.96, Math.PI * 1.92);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Crimson flared fan tail
+      ctx.fillStyle = '#d93829';
+      ctx.beginPath();
+      ctx.moveTo(9, 2);
+      ctx.lineTo(18, -3);
+      ctx.lineTo(17, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
     }
   } else if (ingredientId === 'noodles') {
     if (isBurnt) {
@@ -219,60 +242,98 @@ export function drawIngredientSprite(ctx, ingredientId, prepState, x, y, scale =
       ctx.fill();
     } else if (isCooked) {
       const broth = ctx.createRadialGradient(-3, -2, 2, 0, 1, 17);
-      broth.addColorStop(0, '#ffe378');
+      broth.addColorStop(0, '#ffe67d');
       broth.addColorStop(1, '#c97e1c');
       ctx.fillStyle = broth;
       ctx.beginPath();
       ctx.ellipse(0, 1, 17, 11, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#fff5c8';
-      ctx.lineWidth = 1.9;
+      ctx.strokeStyle = '#fff8d4';
+      ctx.lineWidth = 2.0;
       for (const yOff of [-3, 1, 5]) {
         ctx.beginPath();
-        ctx.moveTo(-10, yOff);
-        ctx.quadraticCurveTo(0, yOff - 4, 10, yOff);
+        ctx.moveTo(-11, yOff);
+        ctx.quadraticCurveTo(0, yOff - 4.5, 11, yOff);
         ctx.stroke();
       }
     } else {
-      ctx.fillStyle = '#edd285';
-      ctx.beginPath();
-      ctx.ellipse(0, 1, 16, 10, 0, 0, Math.PI * 2);
+      // Tangled wavy golden-yellow ramen noodle nest
+      ctx.fillStyle = '#f2cf66';
+      roundedRectPath(ctx, -15, -9, 30, 18, 8);
       ctx.fill();
-      ctx.strokeStyle = '#bd9137';
+      ctx.strokeStyle = '#b58020';
       ctx.lineWidth = 1.6;
+      for (const yOff of [-5, 0, 5]) {
+        ctx.beginPath();
+        ctx.moveTo(-13, yOff);
+        ctx.bezierCurveTo(-5, yOff - 4, 5, yOff + 4, 13, yOff);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = '#fff4b8';
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.ellipse(0, 1, 10, 6, 0, 0, Math.PI * 2);
+      ctx.moveTo(-11, -3);
+      ctx.bezierCurveTo(-3, -7, 4, 1, 11, -3);
       ctx.stroke();
     }
   } else if (ingredientId === 'curry') {
-    ctx.fillStyle = isBurnt ? '#1c1514' : isCooked ? '#a85a14' : '#c98732';
-    ctx.beginPath();
-    ctx.ellipse(0, 1, 16, 10.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    if (!isBurnt) {
-      ctx.fillStyle = '#e89835';
+    if (isBurnt) {
+      ctx.fillStyle = '#1c1514';
+      roundedRectPath(ctx, -14, -10, 28, 20, 4);
+      ctx.fill();
+    } else if (isCooked) {
+      ctx.fillStyle = '#a85a14';
+      ctx.beginPath();
+      ctx.ellipse(0, 1, 16, 10.5, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#f28b30';
       ctx.beginPath();
       ctx.arc(-5, -1, 3.2, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#f2dd96';
+      ctx.fillStyle = '#f5e098';
       ctx.beginPath();
       ctx.arc(5, 2, 3, 0, Math.PI * 2);
       ctx.fill();
+    } else {
+      // Rich dark-brown 4-square scored Japanese curry roux block
+      ctx.fillStyle = '#753c12';
+      roundedRectPath(ctx, -14, -10, 28, 20, 3.5);
+      ctx.fill();
+      ctx.strokeStyle = '#3d1c06';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.lineTo(0, 10);
+      ctx.moveTo(-14, 0);
+      ctx.lineTo(14, 0);
+      ctx.stroke();
+      ctx.fillStyle = '#d98a2e';
+      for (const [cx, cy] of [[-7, -5], [7, -5], [-7, 5], [7, 5]]) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
   } else if (ingredientId === 'rice') {
-    ctx.fillStyle = '#734526';
+    ctx.fillStyle = '#3d2214';
     ctx.beginPath();
     ctx.arc(0, 2, 16, 0, Math.PI);
     ctx.fill();
-    ctx.fillStyle = '#fffaf0';
+    ctx.strokeStyle = '#c94c38';
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
-    ctx.arc(0, 1, 14, Math.PI, 0);
-    ctx.quadraticCurveTo(0, 6, -14, 1);
+    ctx.moveTo(-15, 2);
+    ctx.lineTo(15, 2);
+    ctx.stroke();
+    ctx.fillStyle = '#fffdf7';
+    ctx.beginPath();
+    ctx.arc(0, 2, 14, Math.PI, 0);
+    ctx.quadraticCurveTo(0, 7, -14, 2);
     ctx.fill();
     ctx.fillStyle = '#2d241e';
     for (const [sx, sy] of [[-4, -6], [3, -7], [6, -2]]) {
       ctx.beginPath();
-      ctx.arc(sx, sy, 1.2, 0, Math.PI * 2);
+      ctx.arc(sx, sy, 1.3, 0, Math.PI * 2);
       ctx.fill();
     }
   } else if (ingredientId === 'yuzu') {
@@ -299,15 +360,15 @@ export function drawIngredientSprite(ctx, ingredientId, prepState, x, y, scale =
       ctx.fill();
     } else {
       const yg = ctx.createRadialGradient(-4, -4, 2, 0, 0, 14);
-      yg.addColorStop(0, '#ffe45e');
-      yg.addColorStop(1, '#d99e16');
+      yg.addColorStop(0, '#fff06b');
+      yg.addColorStop(1, '#d99e14');
       ctx.fillStyle = yg;
       ctx.beginPath();
-      ctx.arc(0, 0, 13, 0, Math.PI * 2);
+      ctx.arc(0, 1, 12.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#47944f';
+      ctx.fillStyle = '#399449';
       ctx.beginPath();
-      ctx.ellipse(7, -9, 6, 3, -0.4, 0, Math.PI * 2);
+      ctx.ellipse(8, -9, 7, 3.6, -0.45, 0, Math.PI * 2);
       ctx.fill();
     }
   } else if (ingredientId === 'scallion') {
@@ -330,15 +391,19 @@ export function drawIngredientSprite(ctx, ingredientId, prepState, x, y, scale =
         ctx.restore();
       }
     } else {
-      ctx.save();
-      ctx.rotate(-0.35);
-      ctx.fillStyle = '#f2f0e4';
-      roundedRectPath(ctx, -16, -4, 12, 8, 3);
-      ctx.fill();
-      ctx.fillStyle = '#49a656';
-      roundedRectPath(ctx, -5, -4, 22, 8, 3);
-      ctx.fill();
-      ctx.restore();
+      // Pair of crisp green-and-white diagonal scallion stalks
+      for (const off of [-3.5, 3.5]) {
+        ctx.save();
+        ctx.translate(0, off);
+        ctx.rotate(-0.35);
+        ctx.fillStyle = '#faf8ef';
+        roundedRectPath(ctx, -16, -2.5, 10, 5, 2.2);
+        ctx.fill();
+        ctx.fillStyle = '#3da352';
+        roundedRectPath(ctx, -6.5, -2.5, 22, 5, 2.2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
   }
 
@@ -902,133 +967,187 @@ export function drawBrassBell(ctx, cx, cy, anim, readyGlow, clock) {
 export function drawTopDownChef(ctx, chef, heldItem, clock) {
   for (let i = 0; i < chef.dashTrail.length; i += 1) {
     const t = chef.dashTrail[i];
-    const a = Math.max(0, t.life / t.maxLife) * 0.45;
+    const a = Math.max(0, t.life / t.maxLife) * 0.44;
     ctx.save();
     ctx.globalAlpha = a;
     ctx.fillStyle = '#ffe99e';
     ctx.beginPath();
-    ctx.arc(t.x, t.y, 26, 0, Math.PI * 2);
+    ctx.ellipse(t.x, t.y + 4, 24, 16, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#fff9df';
-    ctx.lineWidth = 2.6;
-    ctx.beginPath();
-    ctx.arc(t.x, t.y, 31, 0, Math.PI * 2);
+    ctx.lineWidth = 2.4;
     ctx.stroke();
     ctx.restore();
   }
 
+  const cos = Math.cos(chef.facingAngle);
+  const sin = Math.sin(chef.facingAngle);
+  const facingUp = sin < -0.35;
+  const hx = Math.max(-1, Math.min(1, cos));
+  const stride = Math.sin(chef.walkPhase) * 4.5;
+  const sway = Math.sin(clock * 8 + chef.walkPhase) * 3.2;
+  const bob = Math.abs(Math.sin(chef.walkPhase)) * 2.2;
+
   ctx.save();
-  ctx.translate(chef.x, chef.y - 3);
-  ctx.scale(1.62, 1.62);
+  ctx.translate(chef.x, chef.y);
+  ctx.scale(1.16, 1.16);
 
-  // Multi-layered soft 2.5D floor contact shadow
-  ctx.fillStyle = 'rgba(12, 8, 4, 0.30)';
+  // Sharp grounded floor oval shadow directly under chef's clogs
+  ctx.fillStyle = 'rgba(10, 8, 6, 0.36)';
   ctx.beginPath();
-  ctx.ellipse(3, 10, 23, 17, 0, 0, Math.PI * 2);
+  ctx.ellipse(2, 29, 24, 10, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = 'rgba(12, 8, 4, 0.48)';
+  ctx.fillStyle = 'rgba(8, 6, 4, 0.54)';
   ctx.beginPath();
-  ctx.ellipse(2, 7, 17, 13, 0, 0, Math.PI * 2);
+  ctx.ellipse(1, 28, 17, 7, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.rotate(chef.facingAngle + Math.PI / 2);
-  const stride = Math.sin(chef.walkPhase) * 4.8;
+  ctx.translate(0, -bob);
 
-  // Animated wooden geta clogs
-  ctx.fillStyle = '#3d2414';
-  roundedRectPath(ctx, -13, 2 + stride, 8, 12, 3);
+  // Stepping dark indigo trousers & wooden geta sandals
+  ctx.fillStyle = '#1d2b3a';
+  roundedRectPath(ctx, -13, 15, 10, 12 + stride * 0.45, 4);
   ctx.fill();
-  roundedRectPath(ctx, 5, 2 - stride, 8, 12, 3);
+  roundedRectPath(ctx, 3, 15, 10, 12 - stride * 0.45, 4);
+  ctx.fill();
+
+  ctx.fillStyle = '#4a2b17';
+  roundedRectPath(ctx, -14, 24 + stride * 0.5, 11, 7, 2.5);
+  ctx.fill();
+  roundedRectPath(ctx, 3, 24 - stride * 0.5, 11, 7, 2.5);
   ctx.fill();
   ctx.fillStyle = '#d93b2b';
-  ctx.fillRect(-10.5, 3 + stride, 3, 4);
-  ctx.fillRect(7.5, 3 - stride, 3, 4);
+  ctx.fillRect(-10, 24 + stride * 0.5, 3, 3.5);
+  ctx.fillRect(7, 24 - stride * 0.5, 3, 3.5);
 
-  // Indigo Kyoto samue tunic & shoulder highlight folds
+  // Expressive upright 3/4 torso: indigo Kyoto samue + cream front apron + vermilion obi
   ctx.fillStyle = '#234663';
-  roundedRectPath(ctx, -18, -11, 36, 22, 10);
+  roundedRectPath(ctx, -19, -5, 38, 25, 10);
   ctx.fill();
   ctx.fillStyle = '#325f85';
-  roundedRectPath(ctx, -15, -9, 30, 9, 6);
+  roundedRectPath(ctx, -16, -3, 32, 9, 6);
   ctx.fill();
-  ctx.strokeStyle = '#f2f6f8';
-  ctx.lineWidth = 2.2;
-  roundedRectPath(ctx, -18, -11, 36, 22, 10);
+  ctx.strokeStyle = '#eef4f7';
+  ctx.lineWidth = 2;
+  roundedRectPath(ctx, -19, -5, 38, 25, 10);
   ctx.stroke();
 
-  // Cream collar V & vermilion obi sash
-  ctx.fillStyle = '#faf4e6';
-  ctx.beginPath();
-  ctx.moveTo(-7, -10);
-  ctx.lineTo(7, -10);
-  ctx.lineTo(0, -1);
-  ctx.closePath();
-  ctx.fill();
+  if (!facingUp) {
+    ctx.fillStyle = '#faf3e1';
+    roundedRectPath(ctx, -12, 3, 24, 17, 5);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(-8, -4);
+    ctx.lineTo(8, -4);
+    ctx.lineTo(0, 5);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.fillStyle = '#d93b2b';
-  roundedRectPath(ctx, -12, 7.5, 24, 4.5, 2);
+  roundedRectPath(ctx, -16, 4, 32, 4.5, 2);
   ctx.fill();
 
-  // Extended arms + larger hands + held item
-  const handY = -20 - chef.interactAnim * 4;
-  ctx.fillStyle = '#f4c7a0';
-  ctx.beginPath();
-  ctx.arc(-13, handY + 5, 5.5, 0, Math.PI * 2);
-  ctx.arc(13, handY + 5, 5.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  if (heldItem) {
-    if (heldItem.kind === 'dish') {
-      drawPlatedDish(ctx, heldItem.recipeId, ['rice', 'salmon', 'yuzu', 'noodles', 'shrimp', 'chicken', 'curry', 'scallion'], 0, handY - 10, 24, { showPlate: true, glow: true });
-    } else {
-      drawIngredientSprite(ctx, heldItem.ingredientId, heldItem.state, 0, handY - 7, 1.08, 0, heldItem.isPerfect);
+  // Held item rendered behind head if facing up, or prominently in front of chest otherwise
+  const drawCarried = () => {
+    const reach = 14 + chef.interactAnim * 4;
+    const itemX = hx * reach;
+    const itemY = facingUp ? -10 : 8 + Math.max(0, sin) * 5;
+    ctx.fillStyle = '#f4c7a0';
+    ctx.beginPath();
+    ctx.arc(itemX - 11, itemY + 3, 4.8, 0, Math.PI * 2);
+    ctx.arc(itemX + 11, itemY + 3, 4.8, 0, Math.PI * 2);
+    ctx.fill();
+    if (heldItem) {
+      if (heldItem.kind === 'dish') {
+        drawPlatedDish(ctx, heldItem.recipeId, ['rice', 'salmon', 'yuzu', 'noodles', 'shrimp', 'chicken', 'curry', 'scallion'], itemX, itemY - 2, 22, { showPlate: true, glow: true });
+      } else {
+        drawIngredientSprite(ctx, heldItem.ingredientId, heldItem.state, itemX, itemY - 2, 1.12, 0, heldItem.isPerfect);
+      }
     }
+  };
+
+  if (facingUp) drawCarried();
+
+  // Expressive 3/4 head (~82px full character span)
+  const headY = -20;
+  // Fluttering white hachimaki tails behind head
+  ctx.strokeStyle = '#faf6eb';
+  ctx.lineWidth = 3.6;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-hx * 8, headY - 2);
+  ctx.lineTo(-hx * 19 - 5, headY - 8 + sway);
+  ctx.moveTo(-hx * 8, headY + 2);
+  ctx.lineTo(-hx * 18 - 4, headY + 3 + sway * 0.7);
+  ctx.stroke();
+
+  if (facingUp) {
+    ctx.fillStyle = '#1f1714';
+    ctx.beginPath();
+    ctx.arc(0, headY, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(0, headY - 2, 15.2, Math.PI * 1.05, Math.PI * 1.95);
+    ctx.stroke();
+    ctx.fillStyle = '#d93b2b';
+    ctx.beginPath();
+    ctx.arc(-hx * 6, headY - 3, 4.2, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Warm skin face + hair cap + eyes/brows/blush
+    ctx.fillStyle = '#f6cb9f';
+    ctx.beginPath();
+    ctx.arc(0, headY + 1, 15.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dark hair crown
+    ctx.fillStyle = '#1f1714';
+    ctx.beginPath();
+    ctx.arc(0, headY - 3, 15.5, Math.PI, Math.PI * 2);
+    ctx.fill();
+
+    // Bold white & vermilion hachimaki headband across forehead
+    ctx.fillStyle = '#ffffff';
+    roundedRectPath(ctx, -15.5, headY - 8, 31, 6.2, 3);
+    ctx.fill();
+    ctx.fillStyle = '#d93b2b';
+    ctx.beginPath();
+    ctx.arc(hx * 3, headY - 5, 2.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Expressive eyes + white catchlights + focused brows + rosy cheeks
+    const ex = hx * 3.5;
+    ctx.fillStyle = '#211813';
+    ctx.beginPath();
+    ctx.arc(ex - 5, headY + 3.5, 2.2, 0, Math.PI * 2);
+    ctx.arc(ex + 5, headY + 3.5, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(ex - 5.6, headY + 2.8, 0.85, 0, Math.PI * 2);
+    ctx.arc(ex + 4.4, headY + 2.8, 0.85, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#382419';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(ex - 7.5, headY - 0.5);
+    ctx.lineTo(ex - 2.5, headY + 0.5);
+    ctx.moveTo(ex + 7.5, headY - 0.5);
+    ctx.lineTo(ex + 2.5, headY + 0.5);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(228, 108, 92, 0.45)';
+    ctx.beginPath();
+    ctx.ellipse(ex - 8, headY + 7.2, 2.6, 1.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(ex + 8, headY + 7.2, 2.6, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
 
-  // Head with clear forward-facing directional rim, dark hair & white-vermilion hachimaki
-  ctx.fillStyle = '#f4c7a0';
-  ctx.beginPath();
-  ctx.arc(0, -3.2, 12.6, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#1f1714';
-  ctx.beginPath();
-  ctx.arc(0, 1.2, 12.6, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Hair sheen highlight
-  ctx.strokeStyle = 'rgba(255, 245, 230, 0.28)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(0, 0, 7, Math.PI * 1.1, Math.PI * 1.9);
-  ctx.stroke();
-
-  // Bold white hachimaki headband + vermilion crest band
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 5.0;
-  ctx.beginPath();
-  ctx.arc(0, -0.2, 11.6, Math.PI * 0.86, Math.PI * 2.14);
-  ctx.stroke();
-
-  ctx.strokeStyle = '#d93b2b';
-  ctx.lineWidth = 2.4;
-  ctx.beginPath();
-  ctx.arc(0, -0.8, 11.6, Math.PI * 1.18, Math.PI * 1.82);
-  ctx.stroke();
-
-  // Trailing headband tails + vermilion knot
-  const sway = Math.sin(clock * 8 + chef.walkPhase) * 2.8;
-  ctx.strokeStyle = '#faf6eb';
-  ctx.lineWidth = 3.4;
-  ctx.beginPath();
-  ctx.moveTo(-3, 11);
-  ctx.lineTo(-7.5 + sway, 20);
-  ctx.moveTo(3, 11);
-  ctx.lineTo(7.5 + sway, 19);
-  ctx.stroke();
-  ctx.fillStyle = '#d93b2b';
-  ctx.beginPath();
-  ctx.arc(0, 11, 3.4, 0, Math.PI * 2);
-  ctx.fill();
+  if (!facingUp) drawCarried();
 
   ctx.restore();
 }
@@ -1072,15 +1191,15 @@ export function drawCookRing(ctx, cx, cy, r, sk, spec) {
 function drawStationHeader(ctx, rect, label, bgColor = 'rgba(15, 22, 18, 0.94)', textColor = '#fff2d6') {
   const pillW = Math.max(46, rect.w - 10);
   ctx.fillStyle = bgColor;
-  roundedRectPath(ctx, rect.x + 5, rect.y + 3, pillW, 21, 5);
+  roundedRectPath(ctx, rect.x + 5, rect.y + 2, pillW, 18, 5);
   ctx.fill();
   ctx.strokeStyle = 'rgba(218, 180, 102, 0.65)';
   ctx.lineWidth = 1;
   ctx.stroke();
   ctx.fillStyle = textColor;
-  ctx.font = '900 12px "Trebuchet MS", sans-serif';
+  ctx.font = '900 11.5px "Trebuchet MS", sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(label, rect.cx, rect.y + 17.5);
+  ctx.fillText(label, rect.cx, rect.y + 15, pillW - 8);
 }
 
 function drawLiveSteamWisps(ctx, cx, cy, clock, count = 3, tint = '#ffffff', spread = 24) {
@@ -1311,15 +1430,33 @@ function drawCounterProps(ctx, rect, prop) {
   }
 }
 
-export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFocused, isHovered) {
+function stationTopSubrect(rect) {
+  const frontDepth = rect.h >= 120 ? 19 : 15;
+  const topH = rect.h - frontDepth;
+  return {
+    x: rect.x,
+    y: rect.y,
+    w: rect.w,
+    h: topH,
+    cx: rect.cx,
+    cy: rect.y + topH / 2,
+  };
+}
+
+export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFocused, isHovered, textures = null) {
   const highlight = isFocused ? '#ffe066' : isHovered ? '#72c98d' : null;
+  const hinokiPat = textures?.patterns?.hinokiWood ?? null;
 
   if (st.kind === 'counter') {
     const top = drawStationCabinet25D(ctx, rect, 'counter', false, highlight);
-    const wood = ctx.createLinearGradient(top.x, top.y, top.x, top.y + top.h);
-    wood.addColorStop(0, '#ebd09e');
-    wood.addColorStop(1, '#c79758');
-    ctx.fillStyle = wood;
+    if (hinokiPat) {
+      ctx.fillStyle = hinokiPat;
+    } else {
+      const wood = ctx.createLinearGradient(top.x, top.y, top.x, top.y + top.h);
+      wood.addColorStop(0, '#ebd09e');
+      wood.addColorStop(1, '#c79758');
+      ctx.fillStyle = wood;
+    }
     roundedRectPath(ctx, top.x + 1, top.y + 1, top.w - 2, top.h - 1, 8);
     ctx.fill();
     ctx.strokeStyle = '#855c2e';
@@ -1327,15 +1464,6 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
     ctx.stroke();
     ctx.fillStyle = 'rgba(255, 252, 236, 0.45)';
     ctx.fillRect(top.x + 8, top.y + 2, top.w - 16, 2.5);
-    ctx.strokeStyle = 'rgba(110, 72, 32, 0.22)';
-    ctx.lineWidth = 1;
-    for (const frac of [0.34, 0.56, 0.76]) {
-      const gy = top.y + top.h * frac;
-      ctx.beginPath();
-      ctx.moveTo(top.x + 8, gy);
-      ctx.quadraticCurveTo(top.cx, gy + 3, top.x + top.w - 8, gy);
-      ctx.stroke();
-    }
     drawCounterProps(ctx, top, st.prop ?? 'spice_rack');
     return;
   }
@@ -1343,7 +1471,7 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
   if (st.kind === 'pantry') {
     const ing = INGREDIENT_MAP[st.ingredientId];
     const top = drawStationCabinet25D(ctx, rect, 'pantry', false, highlight);
-    ctx.fillStyle = '#382e26';
+    ctx.fillStyle = '#332922';
     roundedRectPath(ctx, top.x + 2, top.y + 2, top.w - 4, top.h - 2, 8);
     ctx.fill();
     ctx.strokeStyle = highlight ?? '#c2a67a';
@@ -1353,22 +1481,45 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
     ctx.fillRect(top.x + 8, top.y + 3, top.w - 16, 2);
 
     ctx.fillStyle = '#191411';
-    roundedRectPath(ctx, top.x + 6, top.y + 6, 21, 18, 4);
+    roundedRectPath(ctx, top.x + 6, top.y + 5, 20, 17, 4);
     ctx.fill();
     ctx.fillStyle = '#ffe5a3';
-    ctx.font = '900 11px "Trebuchet MS", sans-serif';
+    ctx.font = '900 10.5px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(ing.key, top.x + 16.5, top.y + 19);
+    ctx.fillText(ing.key, top.x + 16, top.y + 17.5);
 
-    drawIngredientSprite(ctx, ing.id, 'raw', top.cx - 16, top.cy + 7, 1.05);
+    // Bright stoneware dish-well so all 8 distinct ingredient silhouettes pop sharply
+    ctx.fillStyle = '#f3ece0';
+    ctx.beginPath();
+    ctx.arc(top.cx - 19, top.cy + 8, 19.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#b5996e';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+
+    drawIngredientSprite(ctx, ing.id, 'raw', top.cx - 19, top.cy + 8, 1.02);
 
     ctx.fillStyle = '#fcf6ea';
-    ctx.font = '800 11px "Trebuchet MS", sans-serif';
+    ctx.font = '900 10.5px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'right';
-    ctx.fillText(ing.shortLabel, top.x + top.w - 7, top.y + 19);
-    ctx.fillStyle = '#bfe3b8';
-    ctx.font = '800 9.5px "Trebuchet MS", sans-serif';
-    ctx.fillText(ing.prepBadge, top.x + top.w - 7, top.y + top.h - 7);
+    ctx.fillText(ing.shortLabel, top.x + top.w - 7, top.y + 18, 86);
+
+    const badgeCol = ing.prepBadge === 'GRILL' || ing.prepBadge === 'GRL/FRY'
+      ? '#b53828'
+      : ing.prepBadge === 'FRY'
+        ? '#b86b14'
+        : ing.prepBadge === 'BOIL' || ing.prepBadge === 'SIMMER'
+          ? '#1f6b5a'
+          : ing.prepBadge === 'CHOP'
+            ? '#227a46'
+            : '#46544d';
+    ctx.fillStyle = badgeCol;
+    roundedRectPath(ctx, top.x + top.w - 58, top.y + top.h - 19, 51, 14, 4);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '800 8.5px "Trebuchet MS", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(ing.prepBadge, top.x + top.w - 32.5, top.y + top.h - 9, 46);
     return;
   }
 
@@ -1391,28 +1542,30 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
   if (st.kind === 'chop') {
     const board = kitchen.chopStations[st.id];
     const top = drawStationCabinet25D(ctx, rect, 'chop', Boolean(board?.item), highlight);
-    const wood = ctx.createLinearGradient(top.x, top.y, top.x + top.w, top.y + top.h);
-    wood.addColorStop(0, '#f7e1b5');
-    wood.addColorStop(1, '#d4ab6e');
-    ctx.fillStyle = wood;
+    if (hinokiPat) {
+      ctx.fillStyle = hinokiPat;
+    } else {
+      const wood = ctx.createLinearGradient(top.x, top.y, top.x + top.w, top.y + top.h);
+      wood.addColorStop(0, '#f7e1b5');
+      wood.addColorStop(1, '#d4ab6e');
+      ctx.fillStyle = wood;
+    }
     roundedRectPath(ctx, top.x + 2, top.y + 2, top.w - 4, top.h - 2, 8);
     ctx.fill();
     ctx.strokeStyle = highlight ?? '#8a602e';
     ctx.lineWidth = highlight ? 2.8 : 1.8;
     ctx.stroke();
-    ctx.fillStyle = 'rgba(255, 252, 236, 0.45)';
+    ctx.fillStyle = 'rgba(255, 252, 236, 0.48)';
     ctx.fillRect(top.x + 8, top.y + 3, top.w - 16, 2);
-
-    drawStationHeader(ctx, top, st.label, '#3c2913', '#fff4dc');
 
     if (board?.item) {
       const chopProg = board.hitsNeeded > 0 ? board.hitsDone / board.hitsNeeded : 0;
-      drawIngredientSprite(ctx, board.item.ingredientId, board.item.state, top.cx - 14, top.cy + 8, 1.18, chopProg);
+      drawIngredientSprite(ctx, board.item.ingredientId, board.item.state, top.cx - 14, top.cy + 8, 1.22, chopProg);
       if (board.item.state === 'raw') {
         drawChefKnife(ctx, top.cx + 28, top.cy + 7, board.knifeAnim);
       }
       for (let i = 0; i < board.hitsNeeded; i += 1) {
-        ctx.fillStyle = i < board.hitsDone ? '#33c972' : '#4a3520';
+        ctx.fillStyle = i < board.hitsDone ? '#28b865' : '#4a3520';
         roundedRectPath(ctx, top.cx - 32 + i * 22, top.y + top.h - 10, 18, 6, 3);
         ctx.fill();
       }
@@ -1431,7 +1584,7 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
     const spec = sk?.item ? INGREDIENT_MAP[sk.item.ingredientId] : null;
     const active = Boolean(sk?.item);
     const top = drawStationCabinet25D(ctx, rect, 'cook', active, highlight);
-    const potCy = st.hRows >= 2 ? top.cy + 8 : top.y + 42;
+    const potCy = st.hRows >= 2 ? top.cy + 6 : top.y + 37;
 
     if (st.cookType === 'grill') {
       ctx.fillStyle = '#312c2b';
@@ -1448,8 +1601,8 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
         const ey = rows === 1 ? emberY1 : emberY1 + (er * (emberY2 - emberY1)) / 2;
         for (let e = 0; e < 4; e += 1) {
           const ex = top.x + 28 + e * ((top.w - 56) / 3);
-          const glow = active ? 0.88 + Math.sin(clock * 12 + e + er) * 0.12 : 0.42;
-          ctx.fillStyle = `rgba(255, 92, 34, ${glow})`;
+          const glow = active ? 0.9 + Math.sin(clock * 12 + e + er) * 0.1 : 0.45;
+          ctx.fillStyle = `rgba(255, 96, 34, ${glow})`;
           ctx.beginPath();
           ctx.ellipse(ex, ey, 14, 7.5, 0.2, 0, Math.PI * 2);
           ctx.fill();
@@ -1459,7 +1612,7 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
       ctx.lineWidth = 2.6;
       for (let gx = top.x + 14; gx <= top.x + top.w - 14; gx += 16) {
         ctx.beginPath();
-        ctx.moveTo(gx, top.y + 25);
+        ctx.moveTo(gx, top.y + 22);
         ctx.lineTo(gx, top.y + top.h - 10);
         ctx.stroke();
       }
@@ -1475,14 +1628,14 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
       oil.addColorStop(0, '#ffe475');
       oil.addColorStop(1, '#c97e16');
       ctx.fillStyle = oil;
-      roundedRectPath(ctx, top.x + 12, top.y + 24, top.w - 24, top.h - 32, 6);
+      roundedRectPath(ctx, top.x + 12, top.y + 21, top.w - 24, top.h - 28, 6);
       ctx.fill();
 
       const bubbleCount = active ? 8 : 4;
       ctx.fillStyle = active ? 'rgba(255, 252, 214, 0.86)' : 'rgba(255, 245, 194, 0.42)';
       for (let b = 0; b < bubbleCount; b += 1) {
         const bx = top.x + 24 + ((b * 27 + Math.floor(clock * 20)) % (top.w - 48));
-        const by = top.y + 29 + ((b * 11) % Math.max(12, top.h - 40));
+        const by = top.y + 26 + ((b * 11) % Math.max(12, top.h - 36));
         ctx.beginPath();
         ctx.arc(bx, by, active ? 3.0 : 2.1, 0, Math.PI * 2);
         ctx.fill();
@@ -1497,41 +1650,26 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
 
       ctx.fillStyle = '#633320';
       ctx.beginPath();
-      ctx.arc(top.cx, potCy, 22, 0, Math.PI * 2);
+      ctx.arc(top.cx, potCy, 19.5, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#d49a62';
-      ctx.lineWidth = 2.2;
+      ctx.lineWidth = 2.0;
       ctx.stroke();
       ctx.fillStyle = active ? '#eda93b' : '#402619';
       ctx.beginPath();
-      ctx.arc(top.cx, potCy, 17, 0, Math.PI * 2);
+      ctx.arc(top.cx, potCy, 15, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    drawStationHeader(ctx, top, st.label, 'rgba(15, 22, 18, 0.94)', '#fff2d6');
-
     if (sk?.item) {
-      drawCookRing(ctx, top.cx, potCy, 20, sk, spec);
-      drawIngredientSprite(ctx, sk.item.ingredientId, sk.item.state, top.cx, potCy, 1.0, 0, sk.item.isPerfect);
+      drawCookRing(ctx, top.cx, potCy, 16.5, sk, spec);
+      drawIngredientSprite(ctx, sk.item.ingredientId, sk.item.state, top.cx, potCy, 0.94, 0, sk.item.isPerfect);
 
       if (sk.heatZone === 'burnt') {
-        drawLiveSteamWisps(ctx, top.cx, potCy - 14, clock, 3, 'rgba(72, 65, 60, 0.85)', 14);
+        drawLiveSteamWisps(ctx, top.cx, potCy - 12, clock, 3, 'rgba(72, 65, 60, 0.85)', 14);
       } else {
-        drawLiveSteamWisps(ctx, top.cx, potCy - 12, clock, 3, sk.heatZone === 'perfect' ? '#fff7d4' : '#ffffff', 16);
+        drawLiveSteamWisps(ctx, top.cx, potCy - 10, clock, 3, sk.heatZone === 'perfect' ? '#fff7d4' : '#ffffff', 16);
       }
-
-      const pillCol = sk.heatZone === 'perfect' ? '#1f9653' : sk.heatZone === 'burnt' || sk.heatZone === 'warning' ? '#cf3834' : '#bd671c';
-      const pillTxt = sk.heatZone === 'perfect' ? 'PERFECT!' : sk.heatZone === 'burnt' ? 'BURNT!' : sk.heatZone === 'warning' ? 'PULL!' : 'COOKING';
-      ctx.fillStyle = pillCol;
-      roundedRectPath(ctx, top.cx - 42, top.y + top.h - 17, 84, 17, 4);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 10.5px "Trebuchet MS", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(pillTxt, top.cx, top.y + top.h - 4.5);
     }
     return;
   }
@@ -1539,17 +1677,22 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
   if (st.kind === 'plate') {
     const plate = kitchen.plateStations[st.id];
     const top = drawStationCabinet25D(ctx, rect, 'plate', (plate?.items?.length ?? 0) > 0, highlight);
-    const slate = ctx.createLinearGradient(top.x, top.y, top.x, top.y + top.h);
-    slate.addColorStop(0, '#414950');
-    slate.addColorStop(1, '#272c32');
-    ctx.fillStyle = slate;
+    // Open warm hinoki wood tabletop (replaces dark black POS box!)
+    if (hinokiPat) {
+      ctx.fillStyle = hinokiPat;
+    } else {
+      const wood = ctx.createLinearGradient(top.x, top.y, top.x, top.y + top.h);
+      wood.addColorStop(0, '#f2d9a6');
+      wood.addColorStop(1, '#d9b173');
+      ctx.fillStyle = wood;
+    }
     roundedRectPath(ctx, top.x + 1, top.y + 1, top.w - 2, top.h - 1, 9);
     ctx.fill();
-    ctx.strokeStyle = highlight ?? '#c9ad76';
+    ctx.strokeStyle = highlight ?? '#8a5d2e';
     ctx.lineWidth = highlight ? 3 : 2;
     ctx.stroke();
-    ctx.fillStyle = 'rgba(255, 252, 236, 0.25)';
-    ctx.fillRect(top.x + 10, top.y + 2.5, top.w - 20, 2);
+    ctx.fillStyle = 'rgba(255, 252, 236, 0.55)';
+    ctx.fillRect(top.x + 10, top.y + 2.5, top.w - 20, 2.5);
 
     const candidate = plate?.candidateIds?.length
       ? RECIPE_MAP[plate.candidateIds[0]]
@@ -1559,66 +1702,94 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
     const platedIds = (plate?.items ?? []).map((it) => it.ingredientId);
 
     if (st.hRows >= 2) {
-      drawPlatedDish(ctx, candidate.id, platedIds, top.x + 82, top.cy + 4, 48, {
+      // Woven bamboo dining placemat under oversized 1.5x assembly dish
+      ctx.fillStyle = '#c49652';
+      roundedRectPath(ctx, top.x + 16, top.y + 12, 146, top.h - 24, 10);
+      ctx.fill();
+      ctx.strokeStyle = '#8f6329';
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(110, 72, 26, 0.25)';
+      ctx.lineWidth = 1;
+      for (let py = top.y + 20; py < top.y + top.h - 18; py += 9) {
+        ctx.beginPath();
+        ctx.moveTo(top.x + 22, py);
+        ctx.lineTo(top.x + 156, py);
+        ctx.stroke();
+      }
+
+      drawPlatedDish(ctx, candidate.id, platedIds, top.x + 89, top.cy, 60, {
         showPlate: true,
         glow: platedIds.length > 0,
       });
 
       ctx.textAlign = 'left';
-      ctx.fillStyle = platedIds.length > 0 ? '#ffe48a' : '#e6f0e4';
-      ctx.font = '900 14px "Trebuchet MS", sans-serif';
+      ctx.fillStyle = '#2d1c0c';
+      ctx.font = '900 13.5px "Trebuchet MS", sans-serif';
       ctx.fillText(
         platedIds.length > 0 ? `${candidate.shortName} (${platedIds.length}/3)` : st.label,
-        top.x + 148,
-        top.y + 28,
+        top.x + 174,
+        top.y + 27,
       );
 
       for (let i = 0; i < candidate.steps.length; i += 1) {
         const step = candidate.steps[i];
         const done = platedIds.includes(step.ingredientId);
-        const sy = top.y + 52 + i * 31;
-        ctx.fillStyle = done ? '#28613d' : '#1b2024';
-        roundedRectPath(ctx, top.x + 148, sy - 12, top.w - 190, 23, 6);
+        const sy = top.y + 50 + i * 31;
+        ctx.fillStyle = done ? '#1f8a4b' : '#fcf6e8';
+        roundedRectPath(ctx, top.x + 174, sy - 12, top.w - 208, 24, 6);
         ctx.fill();
+        ctx.strokeStyle = done ? '#155c32' : '#c29e65';
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
 
-        ctx.fillStyle = done ? '#58eb8f' : '#c9974c';
+        ctx.fillStyle = done ? '#ffffff' : '#c9872e';
         ctx.beginPath();
-        ctx.arc(top.x + 162, sy - 0.5, 4.8, 0, Math.PI * 2);
+        ctx.arc(top.x + 188, sy, 4.5, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = done ? '#b8f7cd' : '#edf2ec';
+        ctx.fillStyle = done ? '#ffffff' : '#2b1e10';
         ctx.font = '800 11.5px "Trebuchet MS", sans-serif';
-        ctx.fillText(`${i + 1}. ${step.label}`, top.x + 174, sy + 3.5);
+        ctx.fillText(`${i + 1}. ${step.label}`, top.x + 200, sy + 4);
       }
 
-      ctx.fillStyle = '#f2ece0';
+      ctx.fillStyle = '#fcf8ee';
       ctx.beginPath();
-      ctx.arc(top.x + top.w - 22, top.y + top.h - 20, 11, 0, Math.PI * 2);
+      ctx.arc(top.x + top.w - 18, top.y + top.h - 18, 10, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#4fb85e';
+      ctx.fillStyle = '#45b056';
       ctx.beginPath();
-      ctx.arc(top.x + top.w - 22, top.y + top.h - 20, 7, 0, Math.PI * 2);
+      ctx.arc(top.x + top.w - 18, top.y + top.h - 18, 6.2, 0, Math.PI * 2);
       ctx.fill();
     } else {
-      const dishCx = st.wCols >= 4 ? top.x + 48 : top.x + 44;
-      drawPlatedDish(ctx, candidate.id, platedIds, dishCx, top.cy + 1, 30, {
+      const dishCx = st.wCols >= 4 ? top.x + 42 : top.x + 38;
+      drawPlatedDish(ctx, candidate.id, platedIds, dishCx, top.cy + 1, 29, {
         showPlate: true,
         glow: platedIds.length > 0,
       });
 
-      const tx = st.wCols >= 4 ? top.x + 88 : top.x + 82;
+      const tx = st.wCols >= 4 ? top.x + 80 : top.x + 74;
+      const pillW = top.w - (tx - top.x) - 8;
+      ctx.fillStyle = 'rgba(252, 247, 234, 0.96)';
+      roundedRectPath(ctx, tx - 3, top.y + 10, pillW + 3, 48, 6);
+      ctx.fill();
+      ctx.strokeStyle = '#c49d62';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
       ctx.textAlign = 'left';
-      ctx.fillStyle = platedIds.length > 0 ? '#ffe48a' : '#e1ede0';
-      ctx.font = st.wCols >= 4 ? '900 11.5px "Trebuchet MS", sans-serif' : '900 10.5px "Trebuchet MS", sans-serif';
+      ctx.fillStyle = platedIds.length > 0 ? '#7a3318' : '#2e1d0e';
+      ctx.font = st.wCols >= 4 ? '900 11px "Trebuchet MS", sans-serif' : '900 10px "Trebuchet MS", sans-serif';
       ctx.fillText(
         platedIds.length > 0 ? `${candidate.shortName} (${platedIds.length}/3)` : `${st.label}`,
-        tx,
-        top.y + 27,
+        tx + 3,
+        top.y + 28,
+        pillW - 6,
       );
       const nextStep = candidate.steps.find((s) => !platedIds.includes(s.ingredientId));
-      ctx.fillStyle = nextStep ? '#bce0b6' : '#8ef5b0';
-      ctx.font = st.wCols >= 4 ? '800 10.5px "Trebuchet MS", sans-serif' : '800 9.5px "Trebuchet MS", sans-serif';
-      ctx.fillText(nextStep ? `NEXT: ${nextStep.label.toUpperCase()}` : 'DISH COMPLETE!', tx, top.y + 49);
+      ctx.fillStyle = nextStep ? '#1f7042' : '#15803d';
+      ctx.font = st.wCols >= 4 ? '800 10px "Trebuchet MS", sans-serif' : '800 9px "Trebuchet MS", sans-serif';
+      ctx.fillText(nextStep ? `NEXT: ${nextStep.label.toUpperCase()}` : 'DISH COMPLETE!', tx + 3, top.y + 49, pillW - 6);
     }
     return;
   }
@@ -1628,8 +1799,8 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
     const hasReady = (pass?.plates?.length ?? 0) > 0;
     const top = drawStationCabinet25D(ctx, rect, 'pass', hasReady, highlight);
     const passGrad = ctx.createLinearGradient(top.x, top.y, top.x, top.y + top.h);
-    passGrad.addColorStop(0, hasReady ? '#785527' : '#574636');
-    passGrad.addColorStop(1, hasReady ? '#4f3516' : '#382c21');
+    passGrad.addColorStop(0, hasReady ? '#875f2c' : '#634f3c');
+    passGrad.addColorStop(1, hasReady ? '#593d18' : '#3f3124');
     ctx.fillStyle = passGrad;
     roundedRectPath(ctx, top.x + 1, top.y + 1, top.w - 2, top.h - 1, 9);
     ctx.fill();
@@ -1637,11 +1808,10 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
     ctx.lineWidth = hasReady || highlight ? 2.8 : 1.8;
     ctx.stroke();
 
-    // Miniature Japanese noren valance along top of pass
     const panelW = (top.w - 16) / 4;
     for (let n = 0; n < 4; n += 1) {
       const nx = top.x + 6 + n * (panelW + 1.3);
-      ctx.fillStyle = n % 2 === 0 ? '#a83326' : '#253f59';
+      ctx.fillStyle = n % 2 === 0 ? '#b33425' : '#253f59';
       roundedRectPath(ctx, nx, top.y + 3, panelW - 2, 11, 2);
       ctx.fill();
       ctx.fillStyle = '#f5e8ca';
@@ -1663,25 +1833,8 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
         );
         drawLiveSteamWisps(ctx, top.cx - 18, top.y + 24, clock, 3, '#fff9e6', 14);
         drawBrassBell(ctx, top.x + top.w - 28, top.y + 60, pass.bellAnim, true, clock);
-
-        ctx.fillStyle = '#1f9450';
-        roundedRectPath(ctx, top.x + 12, top.y + 98, top.w - 24, 22, 6);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '900 11.5px "Trebuchet MS", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('READY TO SERVE', top.cx, top.y + 113);
-
-        ctx.fillStyle = '#ffe9b8';
-        ctx.font = '900 12px "Trebuchet MS", sans-serif';
-        ctx.fillText(recipe.shortName, top.cx, top.y + 138);
       } else {
-        drawStationHeader(ctx, top, st.label, 'rgba(15, 22, 18, 0.94)', '#fff2d6');
         drawBrassBell(ctx, top.cx, top.cy + 2, pass?.bellAnim ?? 0, false, clock);
-        ctx.fillStyle = '#e0cca8';
-        ctx.font = '800 11px "Trebuchet MS", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('DELIVER DISH HERE', top.cx, top.y + top.h - 14);
       }
       return;
     }
@@ -1699,31 +1852,99 @@ export function drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFoc
         { showPlate: true, glow: true },
       );
       drawLiveSteamWisps(ctx, top.x + 48, top.cy - 18, clock, 2, '#fff9e6', 12);
-
-      const pillX = top.x + 90;
-      const pillW = top.w - 140;
-      ctx.fillStyle = '#1f9450';
-      roundedRectPath(ctx, pillX, top.y + 17, pillW, 21, 6);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 11.5px "Trebuchet MS", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('READY TO SERVE', pillX + pillW / 2, top.y + 31.5);
-
-      ctx.fillStyle = '#ffe9b8';
-      ctx.font = '900 11px "Trebuchet MS", sans-serif';
-      ctx.fillText(recipe.shortName, pillX + pillW / 2, top.y + 56);
-
       drawBrassBell(ctx, top.x + top.w - 26, top.cy + 4, pass.bellAnim, true, clock);
     } else {
       drawBrassBell(ctx, top.x + top.w - 28, top.cy + 4, pass?.bellAnim ?? 0, false, clock);
+    }
+  }
+}
+
+export function drawStationOverlayBadges(ctx, st, rect, kitchen) {
+  const top = stationTopSubrect(rect);
+
+  if (st.kind === 'chop') {
+    drawStationHeader(ctx, top, st.label, '#3c2913', '#fff4dc');
+    return;
+  }
+
+  if (st.kind === 'cook') {
+    drawStationHeader(ctx, top, st.label, 'rgba(15, 22, 18, 0.96)', '#fff2d6');
+    const sk = kitchen.cookStations[st.id];
+    if (sk?.item) {
+      const pillCol = sk.heatZone === 'perfect' ? '#1f9653' : sk.heatZone === 'burnt' || sk.heatZone === 'warning' ? '#cf3834' : '#bd671c';
+      const pillTxt = sk.heatZone === 'perfect' ? 'PERFECT!' : sk.heatZone === 'burnt' ? 'BURNT!' : sk.heatZone === 'warning' ? 'PULL!' : 'COOKING';
+      ctx.fillStyle = pillCol;
+      roundedRectPath(ctx, top.cx - 39, top.y + top.h - 15.5, 78, 15.5, 4);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 10px "Trebuchet MS", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(pillTxt, top.cx, top.y + top.h - 4, 72);
+    }
+    return;
+  }
+
+  if (st.kind === 'pass') {
+    const pass = kitchen.passStations[st.id];
+    const hasReady = (pass?.plates?.length ?? 0) > 0;
+    if (st.hRows >= 2) {
+      if (hasReady) {
+        const lead = pass.plates[0];
+        const recipe = RECIPE_MAP[lead.recipeId];
+        ctx.fillStyle = '#1f9450';
+        roundedRectPath(ctx, top.x + 12, top.y + 98, top.w - 24, 21, 6);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 11px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('READY TO SERVE', top.cx, top.y + 112.5, top.w - 30);
+
+        ctx.fillStyle = 'rgba(24, 16, 10, 0.9)';
+        roundedRectPath(ctx, top.x + 18, top.y + 123, top.w - 36, 19, 5);
+        ctx.fill();
+        ctx.fillStyle = '#ffe9b8';
+        ctx.font = '900 11px "Trebuchet MS", sans-serif';
+        ctx.fillText(recipe.shortName, top.cx, top.y + 136, top.w - 44);
+      } else {
+        drawStationHeader(ctx, top, st.label, 'rgba(15, 22, 18, 0.96)', '#fff2d6');
+        ctx.fillStyle = '#e8d5b3';
+        ctx.font = '800 11px "Trebuchet MS", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('DELIVER DISH HERE', top.cx, top.y + top.h - 14, top.w - 16);
+      }
+      return;
+    }
+
+    if (hasReady) {
+      const lead = pass.plates[0];
+      const recipe = RECIPE_MAP[lead.recipeId];
+      const pillX = top.x + 88;
+      const pillW = top.w - 138;
+      ctx.fillStyle = '#1f9450';
+      roundedRectPath(ctx, pillX, top.y + 16, pillW, 20, 6);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 11px "Trebuchet MS", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('READY TO SERVE', pillX + pillW / 2, top.y + 30, pillW - 10);
+
+      ctx.fillStyle = 'rgba(24, 16, 10, 0.9)';
+      roundedRectPath(ctx, pillX + 4, top.y + 40, pillW - 8, 19, 5);
+      ctx.fill();
+      ctx.fillStyle = '#ffe9b8';
+      ctx.font = '900 10.5px "Trebuchet MS", sans-serif';
+      ctx.fillText(recipe.shortName, pillX + pillW / 2, top.y + 53, pillW - 16);
+    } else {
       ctx.fillStyle = '#fff0cf';
-      ctx.font = '900 13px "Trebuchet MS", sans-serif';
+      ctx.font = '900 12.5px "Trebuchet MS", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(st.label, top.x + 14, top.y + 34);
+      ctx.fillText(st.label, top.x + 14, top.y + 34, top.w - 60);
       ctx.fillStyle = '#d4be98';
-      ctx.font = '800 10.5px "Trebuchet MS", sans-serif';
-      ctx.fillText('Deliver Dish Here', top.x + 14, top.y + 54);
+      ctx.font = '800 10px "Trebuchet MS", sans-serif';
+      ctx.fillText('Deliver Dish Here', top.x + 14, top.y + 53, top.w - 60);
     }
   }
 }
