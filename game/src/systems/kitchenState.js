@@ -10,7 +10,7 @@ import {
 } from '../config/recipes.js';
 import { stationRect } from '../config/kitchenLayouts.js';
 
-const MAX_PARTICLES = 180;
+const MAX_PARTICLES = 220;
 
 function cookedStateFor(cookType) {
   if (cookType === 'grill') return 'grilled';
@@ -414,7 +414,7 @@ export function updateKitchenState(state, dt, layout, onEvent) {
       sk.item.isPerfect = false;
     }
 
-    if (sk.sizzleTimer >= 0.12) {
+    if (sk.sizzleTimer >= 0.09) {
       sk.sizzleTimer = 0;
       const st = layout.stations.find((s) => s.id === sk.id);
       if (st) {
@@ -423,40 +423,43 @@ export function updateKitchenState(state, dt, layout, onEvent) {
           addParticle(state, {
             kind: 'smoke',
             x: rect.cx + Math.sin(sk.elapsed * 9) * 18,
-            y: rect.cy - 8,
+            y: rect.cy - 12,
             vx: Math.sin(sk.elapsed * 4) * 10,
-            vy: -36,
-            size: 8,
-            color: '#524b46',
+            vy: -42,
+            size: 11,
+            color: '#47403b',
             phase: sk.elapsed * 3,
-            life: 0.75,
-            maxLife: 0.75,
+            life: 0.95,
+            maxLife: 0.95,
           });
         } else {
-          addParticle(state, {
-            kind: 'steam',
-            x: rect.cx + Math.sin(sk.elapsed * 11) * 18,
-            y: rect.cy - 10,
-            vx: Math.cos(sk.elapsed * 5) * 8,
-            vy: -34,
-            size: sk.heatZone === 'perfect' ? 6.8 : 5.2,
-            color: sk.heatZone === 'perfect' ? '#fff0bd' : '#f9f5eb',
-            phase: sk.elapsed * 4,
-            life: 0.72,
-            maxLife: 0.72,
-          });
+          const wisps = sk.heatZone === 'perfect' ? 2 : 1;
+          for (let w = 0; w < wisps; w += 1) {
+            addParticle(state, {
+              kind: 'steam',
+              x: rect.cx + Math.sin(sk.elapsed * 11 + w * 2.1) * 18,
+              y: rect.cy - 14 - w * 4,
+              vx: Math.cos(sk.elapsed * 5 + w) * 9,
+              vy: -40,
+              size: sk.heatZone === 'perfect' ? 8.8 : 7.2,
+              color: sk.heatZone === 'perfect' ? '#fff4cc' : '#ffffff',
+              phase: sk.elapsed * 4 + w * 1.4,
+              life: 0.9,
+              maxLife: 0.9,
+            });
+          }
           const ang = (sk.elapsed * 17) % (Math.PI * 2);
           addParticle(state, {
             kind: 'spark',
             x: rect.cx + Math.cos(ang) * 20,
             y: rect.cy + Math.sin(ang) * 12,
-            vx: Math.cos(ang) * 34,
-            vy: -28 + Math.sin(ang) * 14,
-            size: sk.cookType === 'fryer' ? 3.1 : 2.5,
+            vx: Math.cos(ang) * 38,
+            vy: -32 + Math.sin(ang) * 14,
+            size: sk.cookType === 'fryer' ? 3.5 : 2.8,
             color: sk.cookType === 'grill' ? '#ff7d38' : sk.cookType === 'fryer' ? '#ffe066' : '#fff6cc',
             phase: ang,
-            life: 0.36,
-            maxLife: 0.36,
+            life: 0.42,
+            maxLife: 0.42,
           });
         }
       }

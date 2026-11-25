@@ -177,9 +177,9 @@ export function servePlateFromPass(orders, kitchen, layout, passStationId, onEve
   }
 
   const passSt = layout.stations.find((s) => s.id === passStationId);
-  const passRect = passSt ? stationRect(passSt) : { cx: 1116, y: 134, h: 86 };
-  const popX = passRect.cx;
-  const popY = passRect.y + passRect.h + 26;
+  const passRect = passSt ? stationRect(passSt) : { cx: 1116, y: 168, h: 84 };
+  const popX = Math.max(106, Math.min(1174, passRect.cx));
+  const popY = Math.min(556, passRect.y + passRect.h + 24);
 
   if (bestTicketIdx === -1) {
     pass.plates.shift();

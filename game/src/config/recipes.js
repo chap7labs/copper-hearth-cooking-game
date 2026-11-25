@@ -7,20 +7,20 @@ export const FIXED_STEP = 1 / 60;
 export const GRID_COLS = 18;
 export const GRID_ROWS = 6;
 export const TILE_W = 68;
-export const TILE_H = 86;
+export const TILE_H = 84;
 export const GRID_X0 = 28;
-export const GRID_Y0 = 134;
+export const GRID_Y0 = 168;
 
 export const HUD_LAYOUT = {
-  topRail: { x: 0, y: 0, w: 1280, h: 116 },
-  tickets: [0, 1, 2, 3].map((i) => ({ x: 18 + i * 176, y: 10, w: 168, h: 98 })),
-  timerBox: { x: 732, y: 11, w: 170, h: 96 },
-  scoreBox: { x: 910, y: 11, w: 138, h: 96 },
-  comboBox: { x: 1056, y: 11, w: 72, h: 96 },
-  pauseBtn: { x: 1140, y: 11, w: 122, h: 29 },
-  muteBtn: { x: 1140, y: 44, w: 122, h: 29 },
-  guideBtn: { x: 1140, y: 77, w: 122, h: 29 },
-  statusBar: { x: 28, y: 672, w: 1224, h: 34 },
+  topRail: { x: 0, y: 0, w: 1280, h: 112 },
+  tickets: [0, 1, 2, 3].map((i) => ({ x: 16 + i * 175, y: 8, w: 168, h: 96 })),
+  timerBox: { x: 724, y: 9, w: 168, h: 94 },
+  scoreBox: { x: 900, y: 9, w: 136, h: 94 },
+  comboBox: { x: 1044, y: 9, w: 78, h: 94 },
+  pauseBtn: { x: 1134, y: 10, w: 128, h: 27 },
+  muteBtn: { x: 1134, y: 42, w: 128, h: 27 },
+  guideBtn: { x: 1134, y: 74, w: 128, h: 27 },
+  statusBar: { x: 28, y: 678, w: 1224, h: 34 },
 
   titleShiftCards: [0, 1, 2, 3].map((i) => ({ x: 152 + i * 246, y: 422, w: 230, h: 106 })),
   titleStartBtn: { x: 460, y: 552, w: 360, h: 62 },
@@ -29,9 +29,9 @@ export const HUD_LAYOUT = {
   pauseRestartBtn: { x: 490, y: 374, w: 300, h: 50 },
   pauseTitleBtn: { x: 490, y: 438, w: 300, h: 50 },
 
-  summaryNextBtn: { x: 340, y: 526, w: 240, h: 56 },
-  summaryReplayBtn: { x: 600, y: 526, w: 170, h: 56 },
-  summaryEndlessBtn: { x: 790, y: 526, w: 170, h: 56 },
+  summaryNextBtn: { x: 204, y: 572, w: 300, h: 60 },
+  summaryReplayBtn: { x: 530, y: 572, w: 240, h: 60 },
+  summaryEndlessBtn: { x: 796, y: 572, w: 280, h: 60 },
 };
 
 export const INGREDIENTS = [
@@ -261,7 +261,7 @@ export const SHIFTS = [
     id: 'lantern',
     layoutId: 'lantern',
     name: 'Shift 3: Lantern Dinner',
-    subtitle: 'Evening lantern glow & dual pass',
+    subtitle: 'U-shaped izakaya kitchen & lantern glow',
     durationSec: 200,
     targetScore: 260,
     starThresholds: [200, 290, 390],

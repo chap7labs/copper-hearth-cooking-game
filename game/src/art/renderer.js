@@ -37,8 +37,10 @@ function formatTimer(seconds) {
 
 function drawPanel(ctx, rect, fill, border, radius = 10, lineWidth = 1.5) {
   roundedRectPath(ctx, rect.x, rect.y, rect.w, rect.h, radius);
-  ctx.fillStyle = fill;
-  ctx.fill();
+  if (fill) {
+    ctx.fillStyle = fill;
+    ctx.fill();
+  }
   if (border) {
     ctx.strokeStyle = border;
     ctx.lineWidth = lineWidth;
@@ -52,133 +54,237 @@ export function createKitchenRenderer(canvas) {
   function renderFloorAndLighting(layout, clock) {
     const theme = layout.theme;
 
-    // Outer architectural frame around kitchen floor
-    ctx.fillStyle = theme === 'lantern' ? '#171b24' : '#2a241d';
-    ctx.fillRect(0, 116, CANVAS_WIDTH, CANVAS_HEIGHT - 116);
+    // Outer architectural Kyoto timber & stucco frame
+    ctx.fillStyle = theme === 'lantern' ? '#12151c' : '#30251c';
+    ctx.fillRect(0, 112, CANVAS_WIDTH, CANVAS_HEIGHT - 112);
 
-    // Handcrafted hinoki timber beam valance trim along top wall (y: 116..129)
-    const beamGrad = ctx.createLinearGradient(0, 116, 0, 129);
+    // Real 2.5D Kyoto Back Wall (y: 112..168) with timber beam, shoji windows, wall shelves & celadon backsplash
+    const wallGrad = ctx.createLinearGradient(0, 112, 0, 168);
+    if (theme === 'lantern') {
+      wallGrad.addColorStop(0, '#2a221c');
+      wallGrad.addColorStop(1, '#1e1915');
+    } else if (theme === 'afternoon') {
+      wallGrad.addColorStop(0, '#f2e0be');
+      wallGrad.addColorStop(1, '#dec392');
+    } else {
+      wallGrad.addColorStop(0, '#faf3e1');
+      wallGrad.addColorStop(1, '#ebe0c5');
+    }
+    ctx.fillStyle = wallGrad;
+    ctx.fillRect(20, 112, CANVAS_WIDTH - 40, 56);
+
+    // Top structural hinoki beam (y: 112..120) with brass joinery studs
+    const beamGrad = ctx.createLinearGradient(0, 112, 0, 121);
     beamGrad.addColorStop(0, theme === 'lantern' ? '#4a301e' : '#8a5d32');
-    beamGrad.addColorStop(0.55, theme === 'lantern' ? '#362113' : '#6e4722');
-    beamGrad.addColorStop(1, theme === 'lantern' ? '#24150c' : '#4f3216');
+    beamGrad.addColorStop(1, theme === 'lantern' ? '#26170d' : '#573719');
     ctx.fillStyle = beamGrad;
-    ctx.fillRect(0, 116, CANVAS_WIDTH, 13);
-    ctx.fillStyle = 'rgba(255, 236, 194, 0.22)';
-    ctx.fillRect(0, 116, CANVAS_WIDTH, 1.5);
-    for (let jx = 44; jx < CANVAS_WIDTH; jx += 180) {
-      ctx.fillStyle = '#c89f56';
+    ctx.fillRect(0, 112, CANVAS_WIDTH, 9);
+    for (let jx = 56; jx < CANVAS_WIDTH; jx += 180) {
+      ctx.fillStyle = '#d4aa5a';
       ctx.beginPath();
-      ctx.arc(jx, 122.5, 2.2, 0, Math.PI * 2);
+      ctx.arc(jx, 116.5, 2.1, 0, Math.PI * 2);
       ctx.fill();
     }
 
-    // Continuous 2.5D Kyoto open-kitchen floor (no static 4-box dashboard!)
+    // 3 Sunlit / Twilight Shoji Windows with wooden kumiko lattice frames (y: 121..150)
+    for (const wx of [92, 551, 1010]) {
+      const wy = 121;
+      const ww = 178;
+      const wh = 29;
+      ctx.fillStyle = theme === 'lantern' ? '#263447' : theme === 'afternoon' ? '#ffe094' : '#fffbe0';
+      roundedRectPath(ctx, wx, wy, ww, wh, 2);
+      ctx.fill();
+      if (theme === 'lantern') {
+        const moonGlow = ctx.createRadialGradient(wx + 90, wy + 12, 4, wx + 90, wy + 12, 75);
+        moonGlow.addColorStop(0, 'rgba(195, 222, 255, 0.36)');
+        moonGlow.addColorStop(1, 'rgba(38, 52, 71, 0)');
+        ctx.fillStyle = moonGlow;
+        ctx.fillRect(wx, wy, ww, wh);
+      } else {
+        const sunGlow = ctx.createLinearGradient(wx, wy, wx + ww, wy + wh);
+        sunGlow.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+        sunGlow.addColorStop(1, 'rgba(255, 224, 140, 0.15)');
+        ctx.fillStyle = sunGlow;
+        ctx.fillRect(wx, wy, ww, wh);
+      }
+      ctx.strokeStyle = theme === 'lantern' ? '#3d2718' : '#7a5128';
+      ctx.lineWidth = 2.4;
+      ctx.strokeRect(wx, wy, ww, wh);
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(wx, wy + wh * 0.5);
+      ctx.lineTo(wx + ww, wy + wh * 0.5);
+      for (let kx = wx + 30; kx < wx + ww; kx += 30) {
+        ctx.moveTo(kx, wy);
+        ctx.lineTo(kx, wy + wh);
+      }
+      ctx.stroke();
+    }
+
+    // 2 Hinoki Wall Shelves with stacked celadon bowls & ceramic spice jars (y: 124..148)
+    for (const sx of [318, 774]) {
+      ctx.fillStyle = theme === 'lantern' ? '#4f331e' : '#85582e';
+      ctx.fillRect(sx, 143, 188, 5);
+      ctx.fillStyle = 'rgba(15, 10, 5, 0.35)';
+      ctx.fillRect(sx + 18, 148, 8, 5);
+      ctx.fillRect(sx + 162, 148, 8, 5);
+      // Stacked celadon bowls
+      for (let b = 0; b < 3; b += 1) {
+        ctx.fillStyle = b === 2 ? '#e4f0e8' : '#a8ccb7';
+        roundedRectPath(ctx, sx + 18, 137 - b * 4.5, 24, 6, 3);
+        ctx.fill();
+      }
+      // Ceramic sake & shoyu flasks + spice tins
+      for (const [dx, col, h] of [[66, '#7a4928', 15], [90, '#466e5c', 13], [116, '#c77d32', 12], [142, '#2b241f', 16], [164, '#d9b568', 11]]) {
+        ctx.fillStyle = col;
+        roundedRectPath(ctx, sx + dx, 143 - h, 14, h, 3);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255, 250, 232, 0.35)';
+        ctx.fillRect(sx + dx + 3, 145 - h, 3, h - 4);
+      }
+    }
+
+    // Celadon/Mint Glazed Subway Backsplash Strip (y: 150..164)
+    ctx.fillStyle = theme === 'lantern' ? '#2c4744' : '#c6e2d2';
+    ctx.fillRect(20, 150, CANVAS_WIDTH - 40, 14);
+    ctx.strokeStyle = theme === 'lantern' ? 'rgba(255,255,255,0.12)' : 'rgba(72, 104, 88, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(20, 157);
+    ctx.lineTo(CANVAS_WIDTH - 20, 157);
+    for (let tx = 44; tx < CANVAS_WIDTH - 20; tx += 36) {
+      ctx.moveTo(tx, 150);
+      ctx.lineTo(tx, 164);
+    }
+    ctx.stroke();
+
+    // Baseboard Floor/Wall Seam (y: 164..168) + soft downward shadow onto Row 0
+    ctx.fillStyle = theme === 'lantern' ? '#1c140e' : '#573a1d';
+    ctx.fillRect(20, 164, CANVAS_WIDTH - 40, 4);
+
+    // Continuous 2.5D Kyoto Open-Kitchen Floor (y: 168..672)
     const floorX = GRID_X0 - 8;
-    const floorY = GRID_Y0 - 6;
+    const floorY = GRID_Y0;
     const floorW = GRID_COLS * TILE_W + 16;
-    const floorH = GRID_ROWS * TILE_H + 12;
+    const floorH = GRID_ROWS * TILE_H;
 
     const floorGrad = ctx.createLinearGradient(0, floorY, 0, floorY + floorH);
     if (theme === 'lantern') {
-      floorGrad.addColorStop(0, '#2b3240');
-      floorGrad.addColorStop(1, '#1e232e');
+      floorGrad.addColorStop(0, '#362d26');
+      floorGrad.addColorStop(1, '#26201b');
     } else if (theme === 'afternoon') {
-      floorGrad.addColorStop(0, '#e8cda0');
-      floorGrad.addColorStop(1, '#d4b27d');
+      floorGrad.addColorStop(0, '#ecd4a8');
+      floorGrad.addColorStop(1, '#dab67e');
     } else {
-      floorGrad.addColorStop(0, '#f4e8ce');
-      floorGrad.addColorStop(1, '#e3cfa9');
+      floorGrad.addColorStop(0, '#f7ecd3');
+      floorGrad.addColorStop(1, '#e8d4ab');
     }
     ctx.fillStyle = floorGrad;
-    roundedRectPath(ctx, floorX, floorY, floorW, floorH, 12);
+    roundedRectPath(ctx, floorX, floorY, floorW, floorH, 8);
     ctx.fill();
 
-    // Subtle hinoki wood plank / celadon tile pattern across continuous kitchen floor
     ctx.save();
     ctx.beginPath();
-    roundedRectPath(ctx, floorX, floorY, floorW, floorH, 12);
+    roundedRectPath(ctx, floorX, floorY, floorW, floorH, 8);
     ctx.clip();
 
-    ctx.strokeStyle = theme === 'lantern' ? 'rgba(255, 225, 175, 0.06)' : 'rgba(130, 96, 48, 0.11)';
-    ctx.lineWidth = 1;
-    for (let r = 0; r <= GRID_ROWS; r += 1) {
-      const y = GRID_Y0 + r * TILE_H;
+    // Floor shadow directly below back wall seam
+    const wallAo = ctx.createLinearGradient(0, floorY, 0, floorY + 26);
+    wallAo.addColorStop(0, 'rgba(18, 12, 6, 0.28)');
+    wallAo.addColorStop(1, 'rgba(18, 12, 6, 0)');
+    ctx.fillStyle = wallAo;
+    ctx.fillRect(floorX, floorY, floorW, 26);
+
+    // Warm hinoki wood planks across floor with staggered plank seams
+    ctx.strokeStyle = theme === 'lantern' ? 'rgba(255, 224, 178, 0.07)' : 'rgba(145, 102, 52, 0.14)';
+    ctx.lineWidth = 1.1;
+    const plankH = 28;
+    for (let py = floorY + plankH, rowIdx = 0; py < floorY + floorH; py += plankH, rowIdx += 1) {
       ctx.beginPath();
-      ctx.moveTo(floorX, y);
-      ctx.lineTo(floorX + floorW, y);
+      ctx.moveTo(floorX, py);
+      ctx.lineTo(floorX + floorW, py);
       ctx.stroke();
-    }
-    for (let c = 0; c <= GRID_COLS; c += 1) {
-      const x = GRID_X0 + c * TILE_W;
-      ctx.beginPath();
-      ctx.moveTo(x, floorY);
-      ctx.lineTo(x, floorY + floorH);
-      ctx.stroke();
-    }
-
-    // Celadon backsplash accent band behind North cooking line
-    ctx.fillStyle = theme === 'lantern' ? 'rgba(42, 68, 66, 0.48)' : 'rgba(136, 178, 155, 0.38)';
-    ctx.fillRect(floorX, floorY, floorW, TILE_H + 8);
-
-    // Woven anti-slip kitchen runner mats along Walkways Row 1 & Row 4 (eliminates floor void)
-    for (const matRow of [1, 4]) {
-      const mx = GRID_X0 + 18;
-      const my = GRID_Y0 + matRow * TILE_H + 10;
-      const mw = GRID_COLS * TILE_W - 36;
-      const mh = TILE_H - 20;
-      ctx.fillStyle = theme === 'lantern' ? 'rgba(20, 26, 36, 0.72)' : 'rgba(48, 62, 53, 0.24)';
-      roundedRectPath(ctx, mx, my, mw, mh, 10);
-      ctx.fill();
-      ctx.save();
-      ctx.setLineDash([8, 6]);
-      ctx.strokeStyle = theme === 'lantern' ? 'rgba(215, 168, 96, 0.28)' : 'rgba(198, 158, 94, 0.42)';
-      ctx.lineWidth = 1.4;
-      roundedRectPath(ctx, mx + 4, my + 4, mw - 8, mh - 8, 7);
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.strokeStyle = theme === 'lantern' ? 'rgba(255, 224, 172, 0.06)' : 'rgba(34, 48, 40, 0.11)';
-      ctx.lineWidth = 1;
-      for (let ry = my + 12; ry < my + mh - 8; ry += 11) {
+      const offset = (rowIdx % 2) * 68;
+      for (let px = floorX + offset + 68; px < floorX + floorW; px += 136) {
         ctx.beginPath();
-        ctx.moveTo(mx + 14, ry);
-        ctx.lineTo(mx + mw - 14, ry);
+        ctx.moveTo(px, py - plankH);
+        ctx.lineTo(px, py);
         ctx.stroke();
       }
     }
 
+    // Crisp Celadon/Mint Glazed Ceramic Tile Inlay Zones (breaks out of Copper/Saffron/Ember palette!)
+    const tileLight = theme === 'lantern' ? 'rgba(54, 92, 88, 0.44)' : 'rgba(182, 222, 200, 0.62)';
+    const tileAlt = theme === 'lantern' ? 'rgba(42, 74, 72, 0.44)' : 'rgba(154, 204, 178, 0.56)';
+    const drawCeladonStrip = (c0, r0, wC, hR) => {
+      const sx = GRID_X0 + c0 * TILE_W;
+      const sy = GRID_Y0 + r0 * TILE_H;
+      const tw = TILE_W / 2;
+      const th = TILE_H / 2;
+      for (let r = 0; r < hR * 2; r += 1) {
+        for (let c = 0; c < wC * 2; c += 1) {
+          ctx.fillStyle = (r + c) % 2 === 0 ? tileLight : tileAlt;
+          ctx.fillRect(sx + c * tw + 1, sy + r * th + 1, tw - 2, th - 2);
+        }
+      }
+    };
+
+    if (theme === 'lantern') {
+      drawCeladonStrip(3, 1, 12, 1);
+      drawCeladonStrip(3, 2, 2, 2);
+      drawCeladonStrip(13, 2, 2, 2);
+      drawCeladonStrip(1, 4, 16, 1);
+    } else {
+      drawCeladonStrip(1, 1, 16, 1);
+      drawCeladonStrip(1, 4, 16, 1);
+    }
+
+    // Woven anti-slip kitchen runner mats aligned to open aisles
+    const runners = theme === 'lantern'
+      ? [
+          { x: GRID_X0 + 3 * TILE_W + 10, y: GRID_Y0 + 1 * TILE_H + 10, w: 11 * TILE_W - 20, h: TILE_H - 20 },
+          { x: GRID_X0 + 1 * TILE_W + 10, y: GRID_Y0 + 4 * TILE_H + 10, w: 15 * TILE_W - 20, h: TILE_H - 20 },
+        ]
+      : [
+          { x: GRID_X0 + 18, y: GRID_Y0 + 1 * TILE_H + 10, w: GRID_COLS * TILE_W - 36, h: TILE_H - 20 },
+          { x: GRID_X0 + 18, y: GRID_Y0 + 4 * TILE_H + 10, w: GRID_COLS * TILE_W - 36, h: TILE_H - 20 },
+        ];
+    for (const rm of runners) {
+      ctx.fillStyle = theme === 'lantern' ? 'rgba(18, 24, 30, 0.72)' : 'rgba(38, 64, 52, 0.22)';
+      roundedRectPath(ctx, rm.x, rm.y, rm.w, rm.h, 9);
+      ctx.fill();
+      ctx.save();
+      ctx.setLineDash([8, 6]);
+      ctx.strokeStyle = theme === 'lantern' ? 'rgba(224, 174, 96, 0.34)' : 'rgba(228, 198, 134, 0.56)';
+      ctx.lineWidth = 1.4;
+      roundedRectPath(ctx, rm.x + 4, rm.y + 4, rm.w - 8, rm.h - 8, 6);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     if (theme === 'daylight' || theme === 'afternoon') {
-      // Slanting Kyoto morning/afternoon sunlight shafts with shoji lattice bars
-      ctx.fillStyle = theme === 'afternoon' ? 'rgba(255, 204, 108, 0.28)' : 'rgba(255, 250, 214, 0.34)';
-      for (const sx of [120, 500, 880]) {
+      // Slanting sunlight shafts directly from the 3 back-wall shoji windows
+      ctx.fillStyle = theme === 'afternoon' ? 'rgba(255, 208, 114, 0.28)' : 'rgba(255, 252, 222, 0.36)';
+      for (const sx of [96, 556, 1016]) {
         ctx.beginPath();
         ctx.moveTo(sx, floorY);
-        ctx.lineTo(sx + 180, floorY);
-        ctx.lineTo(sx + 350, floorY + floorH);
-        ctx.lineTo(sx + 170, floorY + floorH);
+        ctx.lineTo(sx + 174, floorY);
+        ctx.lineTo(sx + 340, floorY + floorH);
+        ctx.lineTo(sx + 166, floorY + floorH);
         ctx.closePath();
         ctx.fill();
-
-        ctx.fillStyle = theme === 'afternoon' ? 'rgba(255, 228, 162, 0.14)' : 'rgba(255, 255, 240, 0.18)';
-        ctx.beginPath();
-        ctx.moveTo(sx + 48, floorY);
-        ctx.lineTo(sx + 92, floorY);
-        ctx.lineTo(sx + 262, floorY + floorH);
-        ctx.lineTo(sx + 218, floorY + floorH);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = theme === 'afternoon' ? 'rgba(255, 204, 108, 0.28)' : 'rgba(255, 250, 214, 0.34)';
       }
     } else {
-      // Glowing warm orange-gold lantern pools in Lantern Dinner Service
-      const pulse = 0.9 + Math.sin(clock * 2.5) * 0.1;
-      for (const [lx, ly] of [[60, 220], [60, 470], [946, 155], [1220, 220], [1220, 470]]) {
-        const lg = ctx.createRadialGradient(lx, ly, 12, lx, ly, 210 * pulse);
-        lg.addColorStop(0, 'rgba(255, 162, 62, 0.34)');
-        lg.addColorStop(1, 'rgba(255, 162, 62, 0)');
+      // Real warm orange-gold lantern pools cast onto the timber & celadon floor
+      const pulse = 0.92 + Math.sin(clock * 2.5) * 0.08;
+      for (const [lx, ly] of [[68, 250], [68, 490], [430, 175], [850, 175], [1180, 250], [1180, 490]]) {
+        const lg = ctx.createRadialGradient(lx, ly, 10, lx, ly, 230 * pulse);
+        lg.addColorStop(0, 'rgba(255, 168, 64, 0.42)');
+        lg.addColorStop(0.55, 'rgba(255, 140, 44, 0.16)');
+        lg.addColorStop(1, 'rgba(255, 140, 44, 0)');
         ctx.fillStyle = lg;
         ctx.beginPath();
-        ctx.arc(lx, ly, 210, 0, Math.PI * 2);
+        ctx.arc(lx, ly, 230, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -186,25 +292,24 @@ export function createKitchenRenderer(canvas) {
   }
 
   function renderTopRail(orders, audioMuted, clock, hoverZone) {
-    const railGrad = ctx.createLinearGradient(0, 0, 0, 116);
+    const railGrad = ctx.createLinearGradient(0, 0, 0, 112);
     railGrad.addColorStop(0, '#18211d');
     railGrad.addColorStop(1, '#26332c');
     ctx.fillStyle = railGrad;
-    ctx.fillRect(0, 0, CANVAS_WIDTH, 116);
+    ctx.fillRect(0, 0, CANVAS_WIDTH, 112);
 
-    // Bamboo/brass hanger bar
     ctx.fillStyle = '#c89f56';
-    ctx.fillRect(14, 6, 706, 4);
+    ctx.fillRect(14, 5, 704, 3.5);
 
-    // 4 Washi paper order tickets
+    // 4 Washi paper order tickets with clean internal padding
     for (let i = 0; i < HUD_LAYOUT.tickets.length; i += 1) {
       const box = HUD_LAYOUT.tickets[i];
       const ticket = orders.tickets[i];
       const tilt = TICKET_TILTS[i % TICKET_TILTS.length];
 
       if (!ticket) {
-        drawPanel(ctx, box, 'rgba(255, 248, 232, 0.05)', 'rgba(182, 204, 174, 0.2)', 9, 1);
-        ctx.fillStyle = 'rgba(224, 234, 220, 0.32)';
+        drawPanel(ctx, box, 'rgba(255, 248, 232, 0.05)', 'rgba(182, 204, 174, 0.22)', 9, 1);
+        ctx.fillStyle = 'rgba(224, 234, 220, 0.36)';
         ctx.font = '700 10.5px "Trebuchet MS", sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('OPEN SLOT', box.x + box.w / 2, box.y + box.h / 2 + 4);
@@ -229,46 +334,46 @@ export function createKitchenRenderer(canvas) {
       drawPanel(ctx, box, bg, isUrgent ? '#e5484d' : '#c9a66b', 9, isUrgent ? 2.4 : 1.4);
 
       ctx.fillStyle = recipe.badgeBg;
-      roundedRectPath(ctx, box.x + 5, box.y + 6, box.w - 10, 20, 5);
+      roundedRectPath(ctx, box.x + 6, box.y + 6, box.w - 12, 19, 5);
       ctx.fill();
 
       ctx.fillStyle = '#ffe9b8';
       ctx.font = '700 9.5px "Trebuchet MS", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(ticket.ticketNumber, box.x + 10, box.y + 19);
+      ctx.fillText(ticket.ticketNumber, box.x + 11, box.y + 19);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = '800 10.5px "Trebuchet MS", sans-serif';
+      ctx.font = '800 10px "Trebuchet MS", sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(recipe.shortName, box.x + box.w - 10, box.y + 19);
+      ctx.fillText(recipe.shortName, box.x + box.w - 11, box.y + 19);
 
       drawPlatedDish(
         ctx,
         recipe.id,
         recipe.steps.map((s) => s.ingredientId),
-        box.x + 32,
-        box.y + 54,
-        20,
+        box.x + 31,
+        box.y + 53,
+        19,
         { showPlate: true },
       );
 
       for (let sIdx = 0; sIdx < recipe.steps.length; sIdx += 1) {
         const step = recipe.steps[sIdx];
         const ing = INGREDIENT_MAP[step.ingredientId];
-        const sy = box.y + 34 + sIdx * 16;
+        const sy = box.y + 33 + sIdx * 16;
         ctx.fillStyle = '#efe7d3';
-        roundedRectPath(ctx, box.x + 60, sy - 4, 98, 13, 4);
+        roundedRectPath(ctx, box.x + 58, sy - 4, 100, 13, 4);
         ctx.fill();
 
         ctx.fillStyle = ing.accent;
         ctx.beginPath();
-        ctx.arc(box.x + 68, sy + 2.5, 3.6, 0, Math.PI * 2);
+        ctx.arc(box.x + 66, sy + 2.5, 3.4, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#24201a';
         ctx.font = '700 9px "Trebuchet MS", sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(ing.shortLabel, box.x + 75, sy + 5.5);
+        ctx.fillText(ing.shortLabel, box.x + 73, sy + 5.5);
 
         const tag = step.requiredState === 'grilled'
           ? 'GRL'
@@ -281,12 +386,12 @@ export function createKitchenRenderer(canvas) {
                 : 'RAW';
         ctx.fillStyle = '#6e5739';
         ctx.textAlign = 'right';
-        ctx.fillText(tag, box.x + 154, sy + 5.5);
+        ctx.fillText(tag, box.x + 153, sy + 5.5);
       }
 
-      const barX = box.x + 7;
+      const barX = box.x + 8;
       const barY = box.y + box.h - 12;
-      const barW = box.w - 14;
+      const barW = box.w - 16;
       ctx.fillStyle = '#dfd6be';
       roundedRectPath(ctx, barX, barY, barW, 7, 3.5);
       ctx.fill();
@@ -296,7 +401,6 @@ export function createKitchenRenderer(canvas) {
       ctx.restore();
     }
 
-    // Shift Timer Pill
     const shift = SHIFTS[orders.shiftIndex] ?? SHIFTS[0];
     const tBox = HUD_LAYOUT.timerBox;
     const lowTime = !shift.endless && orders.shiftTimeLeft <= 20;
@@ -304,49 +408,46 @@ export function createKitchenRenderer(canvas) {
     ctx.fillStyle = '#b9d4b6';
     ctx.font = '700 10px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(shift.endless ? 'ENDLESS' : 'SHIFT TIMER', tBox.x + tBox.w / 2, tBox.y + 19);
-    drawIcon(ctx, 'clock', tBox.x + 28, tBox.y + 52, 20, lowTime ? '#ff8b7b' : '#f4cf6b');
+    ctx.fillText(shift.endless ? 'ENDLESS' : 'SHIFT TIMER', tBox.x + tBox.w / 2, tBox.y + 18);
+    drawIcon(ctx, 'clock', tBox.x + 28, tBox.y + 50, 20, lowTime ? '#ff8b7b' : '#f4cf6b');
     ctx.fillStyle = lowTime ? '#ffb1a6' : '#f9f5e8';
-    ctx.font = '900 32px "Trebuchet MS", sans-serif';
+    ctx.font = '900 31px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(
       shift.endless ? `${orders.dishesServed} DISHES` : formatTimer(orders.shiftTimeLeft),
-      shift.endless ? tBox.x + 44 : tBox.x + 48,
-      tBox.y + 62,
+      shift.endless ? tBox.x + 42 : tBox.x + 46,
+      tBox.y + 60,
     );
     ctx.fillStyle = '#c9d9c6';
     ctx.font = '700 9.5px "Trebuchet MS", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(shift.endless ? `MISSED ${orders.missedTickets}/3` : shift.name.toUpperCase(), tBox.x + tBox.w / 2, tBox.y + 84);
+    ctx.fillText(shift.endless ? `MISSED ${orders.missedTickets}/3` : shift.name.toUpperCase(), tBox.x + tBox.w / 2, tBox.y + 82);
 
-    // Score Pill
     const sBox = HUD_LAYOUT.scoreBox;
     drawPanel(ctx, sBox, '#1b2620', '#96b593', 10, 1.8);
     ctx.fillStyle = '#b9d4b6';
     ctx.font = '700 10px "Trebuchet MS", sans-serif';
-    ctx.fillText('EARNINGS', sBox.x + sBox.w / 2, sBox.y + 19);
+    ctx.fillText('EARNINGS', sBox.x + sBox.w / 2, sBox.y + 18);
     ctx.fillStyle = '#92f0a1';
     ctx.font = '900 30px "Trebuchet MS", sans-serif';
-    ctx.fillText(`$${orders.score}`, sBox.x + sBox.w / 2, sBox.y + 58);
+    ctx.fillText(`$${orders.score}`, sBox.x + sBox.w / 2, sBox.y + 57);
     ctx.fillStyle = '#d1e0ce';
     ctx.font = '700 10.5px "Trebuchet MS", sans-serif';
-    ctx.fillText(`TARGET $${shift.targetScore}`, sBox.x + sBox.w / 2, sBox.y + 83);
+    ctx.fillText(`TARGET $${shift.targetScore}`, sBox.x + sBox.w / 2, sBox.y + 82);
 
-    // Combo Pill
     const cBox = HUD_LAYOUT.comboBox;
     const hot = orders.combo >= 2;
     drawPanel(ctx, cBox, hot ? '#573014' : '#1b2620', hot ? '#ffd05b' : '#7a9978', 10, 1.8);
     ctx.fillStyle = '#b9d4b6';
     ctx.font = '700 9.5px "Trebuchet MS", sans-serif';
-    ctx.fillText('COMBO', cBox.x + cBox.w / 2, cBox.y + 19);
+    ctx.fillText('COMBO', cBox.x + cBox.w / 2, cBox.y + 18);
     ctx.fillStyle = hot ? '#ffe169' : '#d2ded0';
     ctx.font = '900 28px "Trebuchet MS", sans-serif';
-    ctx.fillText(`x${orders.combo}`, cBox.x + cBox.w / 2, cBox.y + 58);
+    ctx.fillText(`x${orders.combo}`, cBox.x + cBox.w / 2, cBox.y + 57);
     ctx.fillStyle = hot ? '#ffbd59' : '#95ad92';
     ctx.font = '700 9.5px "Trebuchet MS", sans-serif';
-    ctx.fillText(hot ? 'HOT!' : 'STREAK', cBox.x + cBox.w / 2, cBox.y + 83);
+    ctx.fillText(hot ? 'HOT!' : 'STREAK', cBox.x + cBox.w / 2, cBox.y + 82);
 
-    // Utility buttons
     const btns = [
       { rect: HUD_LAYOUT.pauseBtn, id: 'btn_pause', label: 'PAUSE [P]', icon: 'pause' },
       { rect: HUD_LAYOUT.muteBtn, id: 'btn_mute', label: audioMuted ? 'MUTED [M]' : 'AUDIO [M]', icon: audioMuted ? 'sound_off' : 'sound_on' },
@@ -355,53 +456,91 @@ export function createKitchenRenderer(canvas) {
     for (const b of btns) {
       const h = hoverZone === b.id;
       drawPanel(ctx, b.rect, h ? '#3b4f42' : '#202d25', h ? '#ffe07d' : '#7f9e7d', 7, 1.4);
-      drawIcon(ctx, b.icon, b.rect.x + 15, b.rect.y + 14.5, 12, '#f5ebc8');
+      drawIcon(ctx, b.icon, b.rect.x + 15, b.rect.y + 13.5, 11.5, '#f5ebc8');
       ctx.fillStyle = '#f5f2e6';
       ctx.font = '700 10.5px "Trebuchet MS", sans-serif';
       ctx.textAlign = 'left';
-      ctx.fillText(b.label, b.rect.x + 28, b.rect.y + 18.5);
+      ctx.fillText(b.label, b.rect.x + 28, b.rect.y + 17.5);
     }
 
     ctx.fillStyle = '#c89f56';
-    ctx.fillRect(0, 114, CANVAS_WIDTH, 2);
+    ctx.fillRect(0, 110, CANVAS_WIDTH, 2);
   }
 
   function renderKitchenWorld(kitchen, orders, chef, layout, hoverZone, clock) {
-    // Draw crisp golden dotted path and destination ring when chef is auto-routing
+    // High-contrast dual-stroke dotted route line
     if (chef.path.length > 0) {
       ctx.save();
-      ctx.strokeStyle = 'rgba(255, 228, 128, 0.85)';
-      ctx.lineWidth = 3.5;
       ctx.lineCap = 'round';
-      ctx.setLineDash([7, 7]);
+      ctx.setLineDash([10, 8]);
+      ctx.strokeStyle = 'rgba(20, 14, 6, 0.55)';
+      ctx.lineWidth = 6.5;
       ctx.beginPath();
       ctx.moveTo(chef.x, chef.y);
       for (const wp of chef.path) ctx.lineTo(wp.x, wp.y);
       ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 232, 134, 0.94)';
+      ctx.lineWidth = 4.2;
+      ctx.stroke();
       ctx.setLineDash([]);
       const dest = chef.path[chef.path.length - 1];
-      const ringR = 11 + Math.sin(clock * 8) * 2;
-      ctx.strokeStyle = 'rgba(255, 232, 140, 0.9)';
-      ctx.lineWidth = 2.2;
+      const ringR = 12 + Math.sin(clock * 8) * 2.2;
+      ctx.strokeStyle = 'rgba(255, 234, 146, 0.95)';
+      ctx.lineWidth = 2.6;
       ctx.beginPath();
       ctx.arc(dest.x, dest.y, ringR, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
 
-    for (const st of layout.stations) {
+    // 2.5D Y-sorted drawables so the 1.62x chef passes behind/in front of kitchen islands naturally
+    const drawList = layout.stations.map((st) => {
       const rect = stationRect(st);
-      const isFocused = chef.focusedStationId === st.id;
-      const isHovered = hoverZone === `st:${st.id}`;
-      drawStationHardware(ctx, st, rect, kitchen, orders, clock, isFocused, isHovered);
+      return {
+        sortY: rect.y + rect.h,
+        draw: () => drawStationHardware(
+          ctx,
+          st,
+          rect,
+          kitchen,
+          orders,
+          clock,
+          chef.focusedStationId === st.id,
+          hoverZone === `st:${st.id}`,
+        ),
+      };
+    });
+    drawList.push({
+      sortY: chef.y + 22,
+      draw: () => drawTopDownChef(ctx, chef, kitchen.heldItem, clock),
+    });
+    drawList.sort((a, b) => a.sortY - b.sortY);
+    for (let i = 0; i < drawList.length; i += 1) {
+      drawList[i].draw();
     }
 
-    // Top-down Kyoto chef walking across floor
-    drawTopDownChef(ctx, chef, kitchen.heldItem, clock);
-
-    // Decorative hanging chōchin lanterns strictly on outer frames & spice divider (0 UI overlap)
+    // Real warm lantern illumination pass + soft evening vignette on Lantern Dinner Service
     if (layout.theme === 'lantern') {
-      for (const [lx, ly] of [[14, 210], [14, 460], [1266, 210], [1266, 460], [946, 126]]) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (const [lx, ly] of [[68, 250], [68, 490], [430, 175], [850, 175], [1180, 250], [1180, 490]]) {
+        const glow = ctx.createRadialGradient(lx, ly, 8, lx, ly, 195);
+        glow.addColorStop(0, 'rgba(255, 165, 62, 0.14)');
+        glow.addColorStop(1, 'rgba(255, 140, 44, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(lx, ly, 195, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      const vig = ctx.createRadialGradient(640, 400, 340, 640, 400, 740);
+      vig.addColorStop(0, 'rgba(8, 10, 16, 0)');
+      vig.addColorStop(1, 'rgba(8, 10, 16, 0.34)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 112, CANVAS_WIDTH, CANVAS_HEIGHT - 112);
+
+      for (const [lx, ly] of [[16, 224], [16, 464], [1264, 224], [1264, 464], [430, 128], [850, 128]]) {
         ctx.fillStyle = '#381608';
         ctx.fillRect(lx - 6, ly - 17, 12, 4);
         ctx.fillRect(lx - 5, ly + 13, 10, 3);
@@ -426,17 +565,17 @@ export function createKitchenRenderer(canvas) {
       const alpha = Math.max(0, p.life / p.maxLife);
       ctx.save();
       if (p.kind === 'steam') {
-        ctx.globalAlpha = alpha * 0.52;
+        ctx.globalAlpha = alpha * 0.78;
         ctx.strokeStyle = p.color;
-        ctx.lineWidth = Math.max(2, p.size * 0.44);
+        ctx.lineWidth = Math.max(2.8, p.size * 0.52);
         ctx.lineCap = 'round';
-        const wave = Math.sin((p.phase ?? 0) + p.life * 9) * 5;
+        const wave = Math.sin((p.phase ?? 0) + p.life * 9) * 6;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
-        ctx.quadraticCurveTo(p.x + wave, p.y - 8, p.x - wave * 0.5, p.y - 16);
+        ctx.quadraticCurveTo(p.x + wave, p.y - 10, p.x - wave * 0.55, p.y - 20);
         ctx.stroke();
       } else {
-        ctx.globalAlpha = alpha * 0.92;
+        ctx.globalAlpha = alpha * 0.94;
         ctx.fillStyle = p.color;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -445,13 +584,12 @@ export function createKitchenRenderer(canvas) {
       ctx.restore();
     }
 
-    // Compact zero-overlap score popups anchored cleanly in open Row 1 corridor below Pass
     for (let i = 0; i < kitchen.popups.length; i += 1) {
       const pop = kitchen.popups[i];
       const alpha = Math.min(1, (pop.life / pop.maxLife) * 1.45);
       ctx.save();
       ctx.globalAlpha = alpha;
-      const pill = { x: pop.x - 68, y: pop.y - 16, w: 136, h: 32 };
+      const pill = { x: pop.x - 70, y: pop.y - 16, w: 140, h: 32 };
       drawPanel(ctx, pill, 'rgba(18, 26, 21, 0.96)', pop.color, 8, 1.7);
       ctx.textAlign = 'center';
       ctx.fillStyle = pop.color;
@@ -465,9 +603,8 @@ export function createKitchenRenderer(canvas) {
       ctx.restore();
     }
 
-    // Bottom Status Bar (HOLDING badge on left, never covers pantry trays)
     const sb = HUD_LAYOUT.statusBar;
-    drawPanel(ctx, sb, 'rgba(22, 30, 25, 0.92)', 'rgba(162, 190, 158, 0.35)', 8, 1.2);
+    drawPanel(ctx, sb, 'rgba(22, 30, 25, 0.94)', 'rgba(162, 190, 158, 0.35)', 8, 1.2);
     let textX = sb.x + 14;
     if (kitchen.heldItem) {
       const pill = { x: sb.x + 6, y: sb.y + 3, w: 232, h: sb.h - 6 };
@@ -650,42 +787,47 @@ export function createKitchenRenderer(canvas) {
   }
 
   function renderShiftSummaryOverlay(orders, hoverZone) {
-    ctx.fillStyle = 'rgba(14, 20, 16, 0.72)';
+    ctx.fillStyle = 'rgba(24, 19, 13, 0.34)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    drawPanel(ctx, { x: 260, y: 102, w: 760, h: 520 }, 'rgba(24, 34, 28, 0.96)', '#d9b568', 20, 3);
+    drawPanel(ctx, { x: 120, y: 58, w: 1040, h: 604 }, 'rgba(22, 33, 27, 0.96)', '#d9b568', 22, 3.2);
+    drawPanel(ctx, { x: 132, y: 70, w: 1016, h: 580 }, null, 'rgba(217, 181, 104, 0.28)', 16, 1.4);
+
+    // Flanking culinary showcase dishes inside modal header
+    drawPlatedDish(ctx, 'yuzu_ramen', ['noodles', 'yuzu', 'scallion'], 248, 178, 56, { showPlate: true, glow: true });
+    drawPlatedDish(ctx, 'teriyaki_salmon', ['rice', 'salmon', 'yuzu'], 1032, 178, 56, { showPlate: true, glow: true });
 
     const shift = SHIFTS[orders.shiftIndex] ?? SHIFTS[0];
     ctx.textAlign = 'center';
     ctx.fillStyle = '#b4d6af';
-    ctx.font = '800 13px "Trebuchet MS", sans-serif';
-    ctx.fillText(shift.name.toUpperCase(), 640, 144);
+    ctx.font = '800 15px "Trebuchet MS", sans-serif';
+    ctx.fillText(shift.name.toUpperCase(), 640, 114);
 
     ctx.fillStyle = '#fbf7ec';
-    ctx.font = '900 38px "Trebuchet MS", sans-serif';
-    ctx.fillText('SHIFT COMPLETE', 640, 190);
+    ctx.font = '900 46px "Trebuchet MS", sans-serif';
+    ctx.fillText('SHIFT COMPLETE', 640, 166);
 
     for (let i = 0; i < 3; i += 1) {
       const lit = i < orders.starsEarned;
-      const sx = 556 + i * 84;
-      const sy = 240;
+      const sx = 528 + i * 112;
+      const sy = 228;
       if (lit) {
-        const starGlow = ctx.createRadialGradient(sx, sy, 4, sx, sy, 34);
-        starGlow.addColorStop(0, 'rgba(255, 215, 80, 0.48)');
+        const starGlow = ctx.createRadialGradient(sx, sy, 6, sx, sy, 46);
+        starGlow.addColorStop(0, 'rgba(255, 215, 80, 0.54)');
         starGlow.addColorStop(1, 'rgba(255, 215, 80, 0)');
         ctx.fillStyle = starGlow;
         ctx.beginPath();
-        ctx.arc(sx, sy, 34, 0, Math.PI * 2);
+        ctx.arc(sx, sy, 46, 0, Math.PI * 2);
         ctx.fill();
       }
-      drawIcon(ctx, 'star', sx, sy, 48, lit ? '#ffd34e' : '#3d4d42');
+      drawIcon(ctx, 'star', sx, sy, 62, lit ? '#ffd34e' : '#3d4d42');
     }
 
     ctx.fillStyle = '#92f0a1';
-    ctx.font = '900 52px "Trebuchet MS", sans-serif';
-    ctx.fillText(`$${orders.score}`, 640, 326);
+    ctx.font = '900 68px "Trebuchet MS", sans-serif';
+    ctx.fillText(`$${orders.score}`, 640, 332);
     ctx.fillStyle = '#d1e0ce';
-    ctx.font = '700 13px "Trebuchet MS", sans-serif';
-    ctx.fillText(`TARGET $${shift.targetScore}   |   3-STAR GOAL $${shift.starThresholds[2]}`, 640, 352);
+    ctx.font = '700 15px "Trebuchet MS", sans-serif';
+    ctx.fillText(`TARGET $${shift.targetScore}   |   3-STAR GOAL $${shift.starThresholds[2]}`, 640, 364);
 
     const stats = [
       { label: 'DISHES SERVED', val: `${orders.dishesServed}` },
@@ -695,15 +837,15 @@ export function createKitchenRenderer(canvas) {
     ];
     for (let i = 0; i < stats.length; i += 1) {
       const st = stats[i];
-      const sx = 312 + i * 168;
-      const sy = 382;
-      drawPanel(ctx, { x: sx, y: sy, w: 152, h: 98 }, '#17211b', '#7a9978', 12, 1.5);
+      const sx = 172 + i * 240;
+      const sy = 404;
+      drawPanel(ctx, { x: sx, y: sy, w: 216, h: 116 }, '#17211b', '#7a9978', 14, 1.6);
       ctx.fillStyle = '#b9d4b6';
-      ctx.font = '700 11px "Trebuchet MS", sans-serif';
-      ctx.fillText(st.label, sx + 76, sy + 30);
+      ctx.font = '800 12.5px "Trebuchet MS", sans-serif';
+      ctx.fillText(st.label, sx + 108, sy + 36);
       ctx.fillStyle = '#ffe5a8';
-      ctx.font = '900 28px "Trebuchet MS", sans-serif';
-      ctx.fillText(st.val, sx + 76, sy + 72);
+      ctx.font = '900 36px "Trebuchet MS", sans-serif';
+      ctx.fillText(st.val, sx + 108, sy + 86);
     }
 
     const hasNext = orders.shiftIndex < SHIFTS.length - 1;
@@ -714,10 +856,10 @@ export function createKitchenRenderer(canvas) {
     ];
     for (const b of btns) {
       const h = hoverZone === b.id;
-      drawPanel(ctx, b.rect, b.fill, h ? '#ffe07d' : '#c89f56', 12, 2);
+      drawPanel(ctx, b.rect, b.fill, h ? '#ffe07d' : '#c89f56', 12, 2.2);
       ctx.fillStyle = '#fff8ea';
-      ctx.font = '800 14.5px "Trebuchet MS", sans-serif';
-      ctx.fillText(b.label, b.rect.x + b.rect.w / 2, b.rect.y + 35);
+      ctx.font = '800 16px "Trebuchet MS", sans-serif';
+      ctx.fillText(b.label, b.rect.x + b.rect.w / 2, b.rect.y + 37);
     }
   }
 
